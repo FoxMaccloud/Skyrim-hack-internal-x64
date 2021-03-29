@@ -64,7 +64,7 @@ void* DetourFunction64(void* pSource, void* pDestination, int dwLen)
 	return (void*)((DWORD_PTR)pTrampoline);
 }
 */
-void* DetourFunction(void* pSource, void* pDestination, int dwLen)
+void* detourFunction(void* pSource, void* pDestination, int dwLen)
 {
 	DWORD MinLen = 14;
 
@@ -163,7 +163,7 @@ uintptr_t WINAPI HackThread(HMODULE hModule)
 	*/
 
 
-	DetourFunction((LPVOID)entityList, (LPVOID)entHook, 18);
+	detourFunction((LPVOID)entityList, (LPVOID)entHook, 18);
 
 
 	std::cout << "Entityhook started!" << std::endl;

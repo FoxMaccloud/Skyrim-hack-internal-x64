@@ -42,19 +42,55 @@ public:
 playerEnt* ents[255];
 playerEnt* entsptr;
 uintptr_t entityObjStart = 0x0;
+uintptr_t entlistJmpBack = 0x0;
 
 
-extern "C" void entityHook(playerEnt* entsptr);
-//extern "C" void entityHook(uintptr_t entityObjStart, playerEnt * entsptr);
-//extern "C" void entityHook();
-
-void __fastcall entHook()
+__attribute__((naked)) void setObjStart()
 {
-	
-	entityHook(entsptr);
-	//entityHook(entityObjStart, entsptr);
-	//entityHook();
+	__asm {
+		// Not neccesary as the hook will fix the stolen bytes.
+		//movss xmm10, [rdi + 0x54]
+		//movss xmm11, [rdi + 0x58]
+		mov entityObjStart, rdi
+		push rax
+		push rcx
+		push rdx
+		push rbx
+		push rbp
+		push rsi
+		push rdi
+	}
+}
 
+__attribute__((naked)) void setEntsptr()
+{
+	__asm {
+		mov rax, entityObjStart
+		mov[entsptr], rax
+	}
+}
+
+__attribute__((naked)) void giveUp()
+{
+	__asm {
+		pop rdi
+		pop rsi
+		pop rbp
+		pop rbx
+		pop rdx
+		pop rcx
+		pop	rax
+		//jmp[entlistJmpBack]
+	}
+}
+
+
+__declspec() void _fastcall entHook()
+{
+	setObjStart();
+	setEntsptr();
+
+	std::cout << "started hook!" << std::endl;
 
 	bool alreadyThere = false;
 
@@ -89,5 +125,58 @@ void __fastcall entHook()
 	}
 
 GIVE_UP:
-	std::cout << "Given up!" << std::endl;
+
+	std::cout << "list: " << ents << std::endl;
+	giveUp();
 }
+
+
+
+
+//extern "C" void hook(uintptr_t EntityObjStart);
+//extern "C" void getEntities(uintptr_t entityObjStart, playerEnt* entsptr);
+//extern "C" void giveUp();
+
+//extern "C" void entityHook(playerEnt* entsptr);
+//
+//void __fastcall entHook()
+//{
+//	entityHook(entsptr);
+//
+//
+//	bool alreadyThere = false;
+//
+//	if (entsptr == nullptr)
+//	{
+//		goto GIVE_UP;
+//	}
+//
+//	for (int i = 0; i < 254; i++)
+//	{
+//		if (ents[i] == entsptr)
+//		{
+//			alreadyThere = true;
+//			break;
+//		}
+//	}
+//
+//	if (alreadyThere)
+//	{
+//		goto GIVE_UP;
+//	}
+//	else
+//	{
+//		for (int i = 0; i < 254; i++)
+//		{
+//			if (ents[i] == 0)
+//			{
+//				ents[i] = entsptr;
+//				break;
+//			}
+//		}
+//	}
+//
+//GIVE_UP:
+//	std::cout << "Given up!" << std::endl;
+//	//giveUp();
+//}
