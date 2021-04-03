@@ -163,11 +163,7 @@ uintptr_t WINAPI HackThread(HMODULE hModule)
 	*/
 
 
-	detourFunction((LPVOID)entityList, (LPVOID)entHook, 18);
-
-
-	std::cout << "Entityhook started!" << std::endl;
-	
+	detourFunction((LPVOID)entityList, (LPVOID)entHook, 18);	
 
 	while (true)
 	{
