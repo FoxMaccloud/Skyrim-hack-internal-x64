@@ -12,7 +12,10 @@
 #include "imgui_impl_opengl3.h"
 #include "GL/gl3w.h"
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 //#include <Psapi.h>
+
+#include "Gui.h"
 
 namespace Menu
 {
@@ -21,6 +24,7 @@ namespace Menu
 	void Render();
 	void Shutdown();
 	void ToggleMenu();
+	void Theme();
 };
 
 #endif
