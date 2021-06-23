@@ -6,36 +6,40 @@ const char* glsl_version;
 RECT windowSize;
 HWND hwnd;
 WINDOWPLACEMENT windowPlacement;
-bool menuShow;
+static bool menuShow;
+bool running;
+
+
+//void drawLine(float x1, float y1, float x2, float y2)
+//{
+//    // Make line
+//    float line[] = {
+//        x1, y1,
+//        x2, x2
+//    };
+//
+//    unsigned int buffer; // The ID, kind of a pointer for VRAM
+//    glGenBuffers(1, &buffer); // Allocate memory for the triangle
+//    glBindBuffer(GL_ARRAY_BUFFER, buffer); // Set the buffer as the active array
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2, line, GL_STATIC_DRAW); // Fill the buffer with data
+//    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0); // Specify how the buffer is converted to vertices
+//    glEnableVertexAttribArray(0); // Enable the vertex array
+//
+//    // Clear previous
+//    glClear(GL_COLOR_BUFFER_BIT);
+//
+//    // Draw the line
+//    glDrawArrays(GL_LINES, 0, 2);
+//
+//    //// Poll for and process events
+//    glfwPollEvents();
+//
+//}
 
 
 
-struct handle_data {
-    unsigned long process_id;
-    HWND window_handle;
-};
 
-BOOL CALLBACK enum_windows_callback(HWND handle, LPARAM lparam) {
-    auto& data = *reinterpret_cast<handle_data*>(lparam);
-    unsigned long process_id = 0;
-    GetWindowThreadProcessId(handle, &process_id);
 
-    if (data.process_id != process_id) {
-        return TRUE;
-    }
-    data.window_handle = handle;
-    return FALSE;
-}
-
-HWND find_main_window() {
-    handle_data data{};
-
-    data.process_id = GetCurrentProcessId();
-    data.window_handle = nullptr;
-    EnumWindows(enum_windows_callback, reinterpret_cast<LPARAM>(&data));
-
-    return data.window_handle;
-}
 
 //Creates menu context
 void Menu::Create()
@@ -45,9 +49,29 @@ void Menu::Create()
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 }
 
+int width;
+int height;
+
+int imguiWidth = 600;
+int imguiHeight = 400;
+
+void getWindowSize()
+{
+    GetWindowRect(hwnd, &windowSize);
+    width = windowSize.right - windowSize.left -7;
+    height = windowSize.bottom - windowSize.top -7;
+    if (window)
+    {
+        glfwSetWindowPos(window, windowSize.left, windowSize.top);
+        //glfwSetWindowPos(window, windowPlacement.ptMinPosition.x, windowPlacement.ptMinPosition.y);
+        glfwSetWindowSize(window, width, height);
+        glfwSetWindowPos(window, windowSize.left, windowSize.top);
+    }
+}
+
 void Menu::Initialize()
 {
-
+    running = true;
     menuShow = false;
 
     // TODO: make a re-init func; Do shutdown then recreate/reinit.
@@ -57,9 +81,7 @@ void Menu::Initialize()
     if (!glfwInit())
         fprintf(stderr, "failed to init!\n");
 
-    GetWindowRect(hwnd, &windowSize);
-    int width = windowSize.right - windowSize.left;
-    int height = windowSize.bottom - windowSize.top;
+    getWindowSize();
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     int monitorWidth = (int)(glfwGetVideoMode(monitor)->width);
@@ -76,7 +98,7 @@ void Menu::Initialize()
     //glfwWindowHint(GLFW_MAXIMIZED, true);
 
 
-    if ((width == monitorWidth) && (height == monitorHeight))
+    if ((width+7 == monitorWidth) && (height+7 == monitorHeight))
     {
         glfwWindowHint(GLFW_MAXIMIZED, true);
         window = glfwCreateWindow(monitorWidth, monitorHeight, "", NULL, NULL);
@@ -85,7 +107,8 @@ void Menu::Initialize()
     {
         window = glfwCreateWindow(width, height, "", NULL, NULL);
         GetWindowPlacement(hwnd, &windowPlacement);
-        glfwSetWindowPos(window, windowPlacement.ptMinPosition.x, windowPlacement.ptMinPosition.y);
+        glfwSetWindowPos(window, windowPlacement.ptMaxPosition.x, windowPlacement.ptMaxPosition.y);
+        //glfwSetWindowPos(window, windowPlacement.ptMinPosition.x, windowPlacement.ptMinPosition.y);
     }
 
     //if ((width == glfwGetVideoMode(monitor)->width) && (height == glfwGetVideoMode(monitor)->height))
@@ -125,8 +148,39 @@ void Menu::Initialize()
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
+
+
+// ESP Line & colors
+static float lineR = 0.4f;
+static float lineG = 0.1f;
+static float lineB = 0.8f;
+static float lineA = 1.0f;
+static float lineThickness = 1.0f;
+static bool ESPLines = false;
+
+// ESP Box & colors
+static float boxR = 0.4f;
+static float boxG = 0.1f;
+static float boxB = 0.8f;
+static float boxA = 1.0f;
+static float boxThicc = 1.0f;
+static bool ESPBox = false;
+
+// ESP Text & colors
+static float textR = 0.4f;
+static float textG = 0.1f;
+static float textB = 0.8f;
+static float textA = 1.0f;
+static bool ESPText = false;
+static bool ESPRange = false;
+
+static bool debugConsole = false;
+FILE* f;
+
 void Menu::Render()
 {
+
+    getWindowSize();
 
     glfwPollEvents();
 
@@ -137,8 +191,97 @@ void Menu::Render()
 
     if (menuShow)
     {
-        Gui::basicMenu();
+        ImGui::Begin("Skyrim Hacks by FoxMaccloud", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        
+        ImGui::BeginTabBar("Skyrim#TopBar", ImGuiTabBarFlags_NoTabListScrollingButtons);
+
+
+        // Misc
+        if (ImGui::BeginTabItem("Misc")) {
+
+            ImGui::Text("DEL to unload or press"); ImGui::SameLine();
+            if (ImGui::Button("Unload & Exit"))
+            {
+                running = false;
+            }
+            ImGui::EndTabItem();
+        }
+
+        // ESP
+        if (ImGui::BeginTabItem("ESP")) {
+
+            ImGui::Text("ESP Line Colors");
+            {
+                ImGui::SliderFloat("Red##Line", &lineR, 0.0f, 1.0f, "R = %.1f");
+                ImGui::SliderFloat("Green##Line", &lineG, 0.0f, 1.0f, "G = %.1f");
+                ImGui::SliderFloat("Blue##Line", &lineB, 0.0f, 1.0f, "B = %.1f");
+                ImGui::SliderFloat("Alpha##Line", &lineA, 0.0f, 1.0f, "A = %.1f");
+                ImGui::SliderFloat("Thickness##Line", &lineThickness, 1.0f, 30.0f, "T = %.1f");
+                ImGui::Checkbox("ESP Lines", &ESPLines);
+            }
+            ImGui::Text("ESP Box Colors");
+            {
+                ImGui::SliderFloat("Red##Box", &boxR, 0.0f, 1.0f, "R = %.1f");
+                ImGui::SliderFloat("Green##Box", &boxG, 0.0f, 1.0f, "G = %.1f");
+                ImGui::SliderFloat("Blue##Box", &boxB, 0.0f, 1.0f, "B = %.1f");
+                ImGui::SliderFloat("Alpha##Box", &boxA, 0.0f, 1.0f, "A = %.1f");
+                ImGui::SliderFloat("Thickness##Box", &boxThicc, 1.0f, 30.0f, "T = %.1f");
+                ImGui::Checkbox("ESP Box", &ESPBox);
+            }
+            ImGui::Text("ESP Text Colors");
+            {
+                ImGui::SliderFloat("Red##Text", &textR, 0.0f, 1.0f, "R = %.1f");
+                ImGui::SliderFloat("Green##Text", &textG, 0.0f, 1.0f, "G = %.1f");
+                ImGui::SliderFloat("Blue##Text", &textB, 0.0f, 1.0f, "B = %.1f");
+                ImGui::SliderFloat("Alpha##Text", &textA, 0.0f, 1.0f, "A = %.1f");
+                ImGui::Checkbox("ESP Text", &ESPText); ImGui::SameLine();
+                ImGui::Checkbox("ESP Range Finder", &ESPRange);
+            }
+            ImGui::EndTabItem();
+        }
+
+        // Debug Console
+        if (ImGui::BeginTabItem("Debug")) {
+            if (ImGui::Button("Debug Console"))
+            {
+                debugConsole = !debugConsole;
+                if (debugConsole)
+                {
+                    AllocConsole();
+                    freopen_s(&f, "CONOUT$", "w", stdout);
+                }
+                else
+                {
+                    fclose(f);
+                    FreeConsole();
+                }
+            }
+            ImGui::EndTabItem();
+        }
+
+        //ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPosX() + imguiWidth - 336, ImGui::GetCursorPosY() + imguiHeight - 275)); //250
+        //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+        ImGui::EndTabBar();
+        ImGui::End();
+            
+        //{
+        //    static char text[1024 * 16];
+        //    static char buf[64];
+        //    static ImGuiInputTextFlags flags = ImGuiInputTextFlags_AllowTabInput;
+
+        //    ImGui::Begin("Textbox");
+
+        //    ImGui::InputTextMultiline("##source", text, IM_ARRAYSIZE(text), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16), flags);
+        //    ImGui::InputText("UTF-8 input", buf, IM_ARRAYSIZE(buf));
+
+        //    ImGui::End();
+        //}
+
     }
+
+
+    Cheats::ESPText(ESPText, ESPRange, width, height, "TEST", textR, textG, textB, textA);
 
 
     // Rendering
@@ -149,18 +292,33 @@ void Menu::Render()
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+    
+    Cheats::ESPLines(ESPLines, width, height, lineThickness, lineR, lineG, lineB, lineA);
+    Cheats::ESPBox(ESPBox, width, height, boxThicc, boxR, boxG, boxB, boxA);
+    
     glfwSwapBuffers(window);
 }
 
-void Menu::Shutdown()
+void Menu::Shutdown(HMODULE hModule)
 {
     // Cleanup
+    while (!Cheats::shutdown());
+
+    if (debugConsole)
+    {
+        fclose(f);
+        FreeConsole();
+    }
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
+    Sleep(100);
+    FreeLibraryAndExitThread(hModule, 0);
 }
 
 void Menu::ToggleMenu()
@@ -184,7 +342,7 @@ void Menu::Theme()
     ImGuiStyle* style = &ImGui::GetStyle();
 
     style->ChildBorderSize = 1;
-    style->WindowMinSize = ImVec2(600, 400);
+    style->WindowMinSize = ImVec2(imguiWidth, imguiHeight);
     style->WindowTitleAlign = ImVec2(0.5, 0.5);
     style->AntiAliasedFill = true;
 
@@ -219,6 +377,10 @@ void Menu::Theme()
     style->Colors[ImGuiCol_Button] = ImColor(37, 37, 37, 255);
     style->Colors[ImGuiCol_ButtonActive] = ImColor(41, 41, 41, 255);
     style->Colors[ImGuiCol_ButtonHovered] = ImColor(37, 37, 37, 255);
+
+    style->Colors[ImGuiCol_Tab] = ImColor(136, 0, 20, 140);
+    style->Colors[ImGuiCol_TabHovered] = ImColor(136, 0, 20, 160);
+    style->Colors[ImGuiCol_TabActive] = ImColor(136, 0, 20, 220);
 
     style->Colors[ImGuiCol_SliderGrab] = ImColor(255, 255, 255, 255);
     style->Colors[ImGuiCol_SliderGrabActive] = ImColor(255, 255, 255, 255);

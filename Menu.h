@@ -1,28 +1,17 @@
 #pragma once
+#include "cheats.h"
+
 
 #ifndef MENU_H
 #define MENU_H
 
-#include <Windows.h>
-#include <iostream>
-#include <stdio.h>
-#include <vector>
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-#include "GL/gl3w.h"
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-//#include <Psapi.h>
-
-#include "Gui.h"
 
 namespace Menu
 {
 	void Create();
 	void Initialize();
 	void Render();
-	void Shutdown();
+	void Shutdown(HMODULE hModule);
 	void ToggleMenu();
 	void Theme();
 };

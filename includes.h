@@ -17,8 +17,6 @@ struct vec2
 	int x, y;
 };
 
-// Windows Header Files
-#include <windows.h>
 #include <Windows.h>
 #include <stdio.h>
 #include <iostream>
@@ -28,3 +26,4 @@ struct vec2
 #include <time.h>
 //#include "hooks.h"
 #include <vector>
+#include <TlHelp32.h>

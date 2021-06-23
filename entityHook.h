@@ -1,4 +1,4 @@
-#include "includesAndVars.h"
+#include "includes.h"
 /*
 		movss xmm10, [rdi+0x54]
 		movss xmm11, [rdi+0x58]
@@ -45,10 +45,10 @@ __declspec(naked) void entHook()
 		// orig rax got pushed onto the stack, RAX is currently the address to this func.
 		// We therefor have to pop it off the stack to get its orig value.
 		pop rax
-		mov [entsptr], rdi
-		movss xmm10, [rdi+0x54]
-		movss xmm11, [rdi+0x58]
-		movss xmm12, [rdi+0x5c]
+		mov[entsptr], rdi
+		movss xmm10, [rdi + 0x54]
+		movss xmm11, [rdi + 0x58]
+		movss xmm12, [rdi + 0x5c]
 	}
 
 	__asm {
@@ -112,7 +112,7 @@ GIVE_UP:
 		pop rcx; restore current rcx
 		pop rbx; restore current rbx
 		pop rax; restore current rax
-		jmp [jmpBackAddy]
+		jmp[jmpBackAddy]
 	}
 }
 
