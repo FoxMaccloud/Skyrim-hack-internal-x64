@@ -4,6 +4,8 @@
 
 #ifndef MENU_H
 #define MENU_H
+#define GLFW_MOUSE_PASSTHROUGH   0x0002000D
+
 
 
 namespace Menu

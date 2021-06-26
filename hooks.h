@@ -1,9 +1,4 @@
 #include "includes.h"
-/*
-		movss xmm10, [rdi+0x54]
-		movss xmm11, [rdi+0x58]
-		movss xmm12, [rdi+0x5c]
-*/
 
 class playerEnt
 {
@@ -36,7 +31,7 @@ std::vector<playerEnt*> entities;
 //playerEnt* ents[255];
 playerEnt* entsptr;
 uintptr_t entityObjStart = 0x0;
-uintptr_t jmpBackAddy = 0x0;
+uintptr_t jmpBackAddyEntityList = 0x0;
 
 __declspec(naked) void entHook()
 {
@@ -112,7 +107,34 @@ GIVE_UP:
 		pop rcx; restore current rcx
 		pop rbx; restore current rbx
 		pop rax; restore current rax
-		jmp[jmpBackAddy]
+		jmp[jmpBackAddyEntityList]
+	}
+}
+
+class playerCordinates
+{
+public:
+	char pad_0000[288]; //0x0000
+	vec3 xyz; //0x0120
+};
+
+uintptr_t jmpBacklocalPlayerCordinatesPtr = 0x0;
+playerCordinates* localPlayerCordinates;
+
+__declspec(naked) void playerCords()
+{
+	__asm {
+		pop rax
+		mov [localPlayerCordinates], rcx
+		// orig code
+		mov r12, r9
+		mov rcx, [rcx + 0x20]
+		lea r9, [rsp + 0x30]
+		mov rbx, rdx
+		movaps [rsp + 0xD0], xmm6
+		mov rax, [r14 + 0x10]
+		//
+		jmp [jmpBacklocalPlayerCordinatesPtr]
 	}
 }
 

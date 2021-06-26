@@ -1,5 +1,5 @@
 #include "Cheats.h"
-#include "entityHook.h"
+#include "hooks.h"
 #include <sstream>
 
 // Declare helper functions
@@ -7,6 +7,7 @@ void* detourFunction(void* pSource, void* pDestination, int dwLen);
 bool Detour64(BYTE* src, BYTE* dst, const uintptr_t len);
 bool hookPushRax(void* toHook, void* hk_func, int len);
 bool rewriteOrigBytesEntList(void* toWriteBack, int len = 18);
+bool rewriteOrigBytesLocalPlayerCordinates(void* toWriteBack, int len = 27);
 MODULEINFO GetModuleInfo(const wchar_t* szModule);
 uintptr_t FindPattern(const wchar_t* module, const char* pattern, const char* mask);
 bool worldToScreenDXtoOGL(vec3 pos, vec2& screen, float matrix[16], int windowWidth, int windowHeight);
@@ -17,6 +18,7 @@ float findDistance(vec3 self, vec3 entity);
 HWND handle;
 uintptr_t moduleBase;
 uintptr_t entityList;
+uintptr_t localPlayerCordinatesPtr;
 uintptr_t viewMatrix;
 uintptr_t localPlayerPtr;
 playerEnt* localPlayer;
@@ -30,20 +32,31 @@ bool Cheats::initalize()
 {
 	MODULEINFO info = GetModuleInfo(L"SkyrimSE.exe");
 
-	entityList = FindPattern(
-		L"SkyrimSE.exe",
-		"\xF3\x44\x0F\x10\x57\x54\xF3\x44\x0F\x10\x5F\x58\xF3\x44\x0F\x10\x67\x5C",
-		"xxxxxxxxxxxxxxxxxx"
-	);
+	do
+	{
+		entityList = FindPattern(
+			L"SkyrimSE.exe",
+			"\xF3\x44\x0F\x10\x57\x54\xF3\x44\x0F\x10\x5F\x58\xF3\x44\x0F\x10\x67\x5C",
+			"xxxxxxxxxxxxxxxxxx"
+		);
+	} while (!entityList);
 
-	if (!entityList)
-		return false;
-	else
-		std::cout << "Addr: " << std::hex << entityList << std::endl;
 
 	entities.reserve(256);
-	jmpBackAddy = (uintptr_t)entityList + 18;
+	jmpBackAddyEntityList = (uintptr_t)entityList + 18;
 	hookPushRax((void*)entityList, (void*)entHook, 18);
+
+	do
+	{
+		localPlayerCordinatesPtr = FindPattern(
+			L"SkyrimSE.exe",
+			"\x4D\x8B\xE1\x48\x8B\x49\x20\x4C\x8D\x4C\x24\x30\x48\x8B\xDA\x0F\x29\xB4\x24\xD0\x00\x00\x00\x49\x8B\x46\x10",
+			"xxxxxxxxxxxxxxxxxxxxxxxxxxx"
+		);
+	} while (!localPlayerCordinatesPtr);
+
+	jmpBacklocalPlayerCordinatesPtr = (uintptr_t)localPlayerCordinatesPtr + 27;
+	hookPushRax((void*)localPlayerCordinatesPtr, (void*)playerCords, 27);
 
 	moduleBase = (uintptr_t)info.lpBaseOfDll;
 
@@ -51,14 +64,14 @@ bool Cheats::initalize()
 	localPlayerPtr = moduleBase + 0x2F3B040;
 	localPlayer = *(playerEnt**)(moduleBase + 0x2F3B040);
 
-
 	initalized = true;
 	return true;
 }
 
 bool Cheats::shutdown()
 {
-	if (rewriteOrigBytesEntList((void*)entityList, 18))
+	if ((rewriteOrigBytesEntList((void*)entityList, 18)) && 
+		(rewriteOrigBytesLocalPlayerCordinates((void*)localPlayerCordinatesPtr, 27)))
 		return true;
 	return false;
 }
@@ -150,6 +163,10 @@ void Cheats::ESPText(bool ESPText, bool range, int width, int height, const char
 						{
 							float dist = findDistance(localPlayer->xyz, entities.at(i)->xyz);
 							dist = dist / 100;
+							if (dist > 250.0f)
+							{
+								entities.at(i) = nullptr;
+							}
 							std::ostringstream ss;
 							ss << dist;
 							std::string s(ss.str());
@@ -166,16 +183,36 @@ void Cheats::ESPText(bool ESPText, bool range, int width, int height, const char
 	}
 }
 
+void Cheats::Teleport(vec3 cordinates)
+{
+	if (!initalized)
+	{
+		Cheats::initalize();
+	}
+	if (localPlayerCordinates != nullptr)
+	{
+		localPlayerCordinates->xyz = cordinates;
+	}
+}
+
+vec3 getPlayerPos()
+{
+	if (!initalized)
+	{
+		Cheats::initalize();
+	}
+	if (localPlayerCordinates == nullptr)
+	{
+		vec3 fail = { 4,0,4 };
+		return fail;
+	}
+	return localPlayerCordinates->xyz;
+}
+
+
 
 
 // Helper functions
-
-//void drawLine(float x1, float y1, float x2, float y2)
-//{
-//
-//}
-
-
 
 void* detourFunction(void* pSource, void* pDestination, int dwLen)
 {
@@ -266,6 +303,25 @@ bool rewriteOrigBytesEntList(void* toWriteBack, int len)
 		0xF3, 0x44, 0x0F, 0x10, 0x57, 0x54, // movss xmm10, [rdi+0x54]
 		0xF3, 0x44, 0x0F, 0x10, 0x5F, 0x58, // movss xmm11, [rdi+0x58]
 		0xF3, 0x44, 0x0F, 0x10, 0x67, 0x5C  // movss xmm12, [rdi+0x5c]
+	};
+	memcpy((void*)toWriteBack, orig, sizeof(orig));
+	DWORD temp;
+	VirtualProtect(toWriteBack, len, curProtection, &temp);
+	return true;
+}
+
+bool rewriteOrigBytesLocalPlayerCordinates(void* toWriteBack, int len)
+{
+	DWORD curProtection;
+	VirtualProtect(toWriteBack, len, PAGE_EXECUTE_READWRITE, &curProtection);
+	unsigned char orig[] = {
+
+		0x4d, 0x89, 0xcc,									//mov r12, r9
+		0x48, 0x8b, 0x49, 0x20,								//mov rcx,[rcx + 0x20]
+		0x4c, 0x8d, 0x4c, 0x24, 0x30,						//lea r9,[rsp + 0x30]
+		0x48, 0x89, 0xd3,									//mov rbx, rdx
+		0x0f, 0x29, 0xb4, 0x24, 0xd0, 0x00, 0x00, 0x00,		//movaps[rsp + 0xD0], xmm6
+		0x49, 0x8b, 0x46, 0x10								//mov rax,[r14 + 0x10]
 	};
 	memcpy((void*)toWriteBack, orig, sizeof(orig));
 	DWORD temp;

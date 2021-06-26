@@ -17,6 +17,7 @@
 #include "drawing.h"
 
 HWND find_main_window();
+vec3 getPlayerPos();
 
 namespace Cheats
 {
@@ -26,4 +27,5 @@ namespace Cheats
 	void ESPLines(bool run, int width, int height, float lineWidth, float r, float g, float b, float a);
 	void ESPBox(bool ESPBox, int width, int height, float thicc, float boxR, float boxG, float boxB, float boxA);
 	void ESPText(bool ESPText, bool range, int width, int height, const char* text, float textR, float textG, float textB, float textA);
+	void Teleport(vec3 cordinates);
 }

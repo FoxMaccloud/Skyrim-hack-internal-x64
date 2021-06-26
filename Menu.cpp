@@ -1,5 +1,4 @@
 #include "menu.h"
-#define 	GLFW_MOUSE_PASSTHROUGH   0x0002000D
 
 GLFWwindow* window;
 const char* glsl_version;
@@ -9,37 +8,11 @@ WINDOWPLACEMENT windowPlacement;
 static bool menuShow;
 bool running;
 
+int width;
+int height;
 
-//void drawLine(float x1, float y1, float x2, float y2)
-//{
-//    // Make line
-//    float line[] = {
-//        x1, y1,
-//        x2, x2
-//    };
-//
-//    unsigned int buffer; // The ID, kind of a pointer for VRAM
-//    glGenBuffers(1, &buffer); // Allocate memory for the triangle
-//    glBindBuffer(GL_ARRAY_BUFFER, buffer); // Set the buffer as the active array
-//    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2, line, GL_STATIC_DRAW); // Fill the buffer with data
-//    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0); // Specify how the buffer is converted to vertices
-//    glEnableVertexAttribArray(0); // Enable the vertex array
-//
-//    // Clear previous
-//    glClear(GL_COLOR_BUFFER_BIT);
-//
-//    // Draw the line
-//    glDrawArrays(GL_LINES, 0, 2);
-//
-//    //// Poll for and process events
-//    glfwPollEvents();
-//
-//}
-
-
-
-
-
+int imguiWidth = 600;
+int imguiHeight = 400;
 
 //Creates menu context
 void Menu::Create()
@@ -48,12 +21,6 @@ void Menu::Create()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 }
-
-int width;
-int height;
-
-int imguiWidth = 600;
-int imguiHeight = 400;
 
 void getWindowSize()
 {
@@ -74,7 +41,6 @@ void Menu::Initialize()
     running = true;
     menuShow = false;
 
-    // TODO: make a re-init func; Do shutdown then recreate/reinit.
     hwnd = find_main_window();
     //hwnd = FindWindow(0, L"Skyrim Special Edition");
 
@@ -146,6 +112,8 @@ void Menu::Initialize()
     Menu::Theme();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
+
+    Cheats::initalize();
 }
 
 
@@ -173,6 +141,10 @@ static float textB = 0.8f;
 static float textA = 1.0f;
 static bool ESPText = false;
 static bool ESPRange = false;
+
+// Movement
+vec3 currentPosVec3;
+static bool teleport = false;
 
 static bool debugConsole = false;
 FILE* f;
@@ -240,6 +212,31 @@ void Menu::Render()
             ImGui::EndTabItem();
         }
 
+        // Movement
+        static float currentPos[3];
+        if (!teleport)
+        {
+            currentPosVec3 = getPlayerPos();
+            currentPos[0] = currentPosVec3.x;
+            currentPos[1] = currentPosVec3.y;
+            currentPos[2] = currentPosVec3.z;
+        }
+
+        if (ImGui::BeginTabItem("Movement")) {
+
+            ImGui::Text("Teleport");
+
+            vec3 cords = { currentPos[0], currentPos[1], currentPos[2] };
+            if (ImGui::InputFloat3("XYZ", currentPos))
+                teleport = true;    
+            if (ImGui::Button("Go!"))
+            {
+                Cheats::Teleport(cords);
+                teleport = false;
+            }
+            ImGui::EndTabItem();
+        }
+
         // Debug Console
         if (ImGui::BeginTabItem("Debug")) {
             if (ImGui::Button("Debug Console"))
@@ -264,21 +261,9 @@ void Menu::Render()
 
         ImGui::EndTabBar();
         ImGui::End();
-            
-        //{
-        //    static char text[1024 * 16];
-        //    static char buf[64];
-        //    static ImGuiInputTextFlags flags = ImGuiInputTextFlags_AllowTabInput;
-
-        //    ImGui::Begin("Textbox");
-
-        //    ImGui::InputTextMultiline("##source", text, IM_ARRAYSIZE(text), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16), flags);
-        //    ImGui::InputText("UTF-8 input", buf, IM_ARRAYSIZE(buf));
-
-        //    ImGui::End();
-        //}
 
     }
+
 
 
     Cheats::ESPText(ESPText, ESPRange, width, height, "TEST", textR, textG, textB, textA);
