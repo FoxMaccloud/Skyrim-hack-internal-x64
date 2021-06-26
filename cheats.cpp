@@ -130,7 +130,6 @@ void Cheats::ESPBox(bool run, int width, int height, float thicc, float r, float
 					if (entities.at(i) != nullptr)
 					{
 						drawBox(vScreen.x, vScreen.y, 60.0f, 120.0f, thicc, r, g, b, a);
-						drawString("TEST", vScreen.x, vScreen.y, r, g, b, a);
 					}
 				}
 			}
