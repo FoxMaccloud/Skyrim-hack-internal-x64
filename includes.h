@@ -6,15 +6,15 @@
 
 struct vec4
 {
-	float x, y, z, w;
+	float x = 0.0f, y = 0.0f, z = 0.0f, w = 0.0f;
 };
 struct vec3
 {
-	float x, y, z;
+	float x = 0.0f, y = 0.0f, z = 0.0f;
 };
 struct vec2
 {
-	int x, y;
+	int x = 0.0f, y = 0.0f;
 };
 
 #include <Windows.h>
