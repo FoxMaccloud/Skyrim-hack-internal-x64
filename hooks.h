@@ -5,9 +5,9 @@ class playerEnt
 public:
 	char pad_0000[84]; //0x0000
 	vec3 xyz; //0x0054
-	class locationPtrClass* locationPtr; //0x0060
+	locationPtrClass* locationPtr; //0x0060
 	char pad_0068[392]; //0x0068
-	class namePtrClass* namePtr; //0x01F0
+	namePtrClass* namePtr; //0x01F0
 	char pad_01F8[584]; //0x01F8
 }; //Size: 0x0440
 
@@ -66,31 +66,23 @@ __declspec(naked) void entHook()
 
 	bool alreadyThere = false;
 
-	if (entsptr == nullptr)
+	if (entsptr != nullptr)
 	{
-		goto GIVE_UP;
-	}
-
-	for (int i = 0; i < entities.size(); i++)
-	{
-		if (entities.at(i) == entsptr)
+		for (int i = 0; i < entities.size(); i++)
 		{
-			entities.at(i) = entsptr; // insert
-			alreadyThere = true;
-			break;
+			if (entities.at(i) == entsptr)
+			{
+				entities.at(i) = entsptr; // insert
+				alreadyThere = true;
+				break;
+			}
 		}
-	}
+		if (!alreadyThere)
+		{
+			entities.push_back(entsptr);
+		}
+	};
 
-	if (alreadyThere)
-	{
-		goto GIVE_UP;
-	}
-	else
-	{
-		entities.push_back(entsptr);
-	}
-
-GIVE_UP:
 	__asm {
 		pop r15; restore current r15
 		pop r14; restore current r14

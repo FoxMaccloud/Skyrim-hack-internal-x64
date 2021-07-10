@@ -14,7 +14,6 @@ bool worldToScreenDXtoOGL(vec3 pos, vec2& screen, float matrix[16], int windowWi
 bool worldToScreen(vec3 pos, vec2& screen, float matrix[16], int windowWidth, int windowHeight);
 float findDistance(vec3 self, vec3 entity);
 
-
 HWND handle;
 uintptr_t moduleBase;
 uintptr_t entityList;
@@ -23,111 +22,112 @@ uintptr_t viewMatrix;
 uintptr_t localPlayerPtr;
 playerEnt* localPlayer;
 
-
-
-
 bool initalized = false;
 
-bool Cheats::initalize()
+namespace Cheats
 {
-	MODULEINFO info = GetModuleInfo(L"SkyrimSE.exe");
-
-	do
+	bool initalize()
 	{
-		entityList = FindPattern(
-			L"SkyrimSE.exe",
-			"\xF3\x44\x0F\x10\x57\x54\xF3\x44\x0F\x10\x5F\x58\xF3\x44\x0F\x10\x67\x5C",
-			"xxxxxxxxxxxxxxxxxx"
-		);
-	} while (!entityList);
+		MODULEINFO info = GetModuleInfo(L"SkyrimSE.exe");
 
+		do
+		{
+			entityList = FindPattern(
+				L"SkyrimSE.exe",
+				"\xF3\x44\x0F\x10\x57\x54\xF3\x44\x0F\x10\x5F\x58\xF3\x44\x0F\x10\x67\x5C",
+				"xxxxxxxxxxxxxxxxxx"
+			);
+		} while (!entityList);
 
-	entities.reserve(256);
-	jmpBackAddyEntityList = (uintptr_t)entityList + 18;
-	hookPushRax((void*)entityList, (void*)entHook, 18);
+		entities.reserve(256);
+		jmpBackAddyEntityList = (uintptr_t)entityList + 18;
+		hookPushRax((void*)entityList, (void*)entHook, 18);
 
-	do
-	{
-		localPlayerCordinatesPtr = FindPattern(
-			L"SkyrimSE.exe",
-			"\x4D\x8B\xE1\x48\x8B\x49\x20\x4C\x8D\x4C\x24\x30\x48\x8B\xDA\x0F\x29\xB4\x24\xD0\x00\x00\x00\x49\x8B\x46\x10",
-			"xxxxxxxxxxxxxxxxxxxxxxxxxxx"
-		);
-	} while (!localPlayerCordinatesPtr);
+		do
+		{
+			localPlayerCordinatesPtr = FindPattern(
+				L"SkyrimSE.exe",
+				"\x4D\x8B\xE1\x48\x8B\x49\x20\x4C\x8D\x4C\x24\x30\x48\x8B\xDA\x0F\x29\xB4\x24\xD0\x00\x00\x00\x49\x8B\x46\x10",
+				"xxxxxxxxxxxxxxxxxxxxxxxxxxx"
+			);
+		} while (!localPlayerCordinatesPtr);
 
-	jmpBacklocalPlayerCordinatesPtr = (uintptr_t)localPlayerCordinatesPtr + 27;
-	hookPushRax((void*)localPlayerCordinatesPtr, (void*)playerCords, 27);
+		jmpBacklocalPlayerCordinatesPtr = (uintptr_t)localPlayerCordinatesPtr + 27;
+		hookPushRax((void*)localPlayerCordinatesPtr, (void*)playerCords, 27);
 
-	moduleBase = (uintptr_t)info.lpBaseOfDll;
+		moduleBase = (uintptr_t)info.lpBaseOfDll;
 
-	viewMatrix = moduleBase + 0x2F4C910;
-	localPlayerPtr = moduleBase + 0x2F3B040;
-	localPlayer = *(playerEnt**)(moduleBase + 0x2F3B040);
+		viewMatrix = moduleBase + 0x2F4C910;
+		localPlayerPtr = moduleBase + 0x2F3B040;
+		localPlayer = *(playerEnt**)(moduleBase + 0x2F3B040);
 
-	initalized = true;
-	return true;
-}
-
-bool Cheats::shutdown()
-{
-	if ((rewriteOrigBytesEntList((void*)entityList, 18)) && 
-		(rewriteOrigBytesLocalPlayerCordinates((void*)localPlayerCordinatesPtr, 27)))
+		initalized = true;
 		return true;
-	return false;
-}
-
-
-float VM[16];
-
-void Cheats::ESPLines(bool run, int width, int height, float lineWidth, float r, float g, float b, float a)
-{
-	if (!initalized)
-	{
-		Cheats::initalize();
 	}
 
-	if (run)
+	bool shutdown()
 	{
-		memcpy(&VM, (PBYTE*)viewMatrix, sizeof(VM)); //0x7FF68896C910 ? SkyrimSE.exe+2F4C910
+		if ((rewriteOrigBytesEntList((void*)entityList, 18)) &&
+			(rewriteOrigBytesLocalPlayerCordinates((void*)localPlayerCordinatesPtr, 27)))
+			return true;
+		return false;
+	}
 
-		for (int i = 0; i < entities.size(); i++)
+	float VM[16];
+
+	void ESPLines(bool run, int width, int height, float lineWidth, float r, float g, float b, float a)
+	{
+		if (!initalized)
 		{
-			if (entities.at(i) != nullptr)
+			initalize();
+		}
+
+		if (run)
+		{
+			memcpy(&VM, (PBYTE*)viewMatrix, sizeof(VM)); //0x7FF68896C910 ? SkyrimSE.exe+2F4C910
+
+			for (int i = 0; i < entities.size(); i++)
 			{
-				vec2 vScreen;
-				if (worldToScreenDXtoOGL(entities.at(i)->xyz, vScreen, VM, width, height))
+				if (entities.at(i) != nullptr)
 				{
-					if (entities.at(i) != nullptr)
+					vec2 vScreen;
+					if (worldToScreenDXtoOGL(entities.at(i)->xyz, vScreen, VM, width, height))
 					{
-						drawLine(width / 2, 0, vScreen.x, vScreen.y, lineWidth, r, g, b, a);
+						if (entities.at(i) != nullptr)
+						{
+							drawLine(width / 2, 0, vScreen.x, vScreen.y, lineWidth, r, g, b, a);
+						}
 					}
 				}
 			}
 		}
 	}
-}
 
-void Cheats::ESPBox(bool run, int width, int height, float thicc, float r, float g, float b, float a)
-{
-	if (!initalized)
+	void ESPBox(bool run, int width, int height, float thicc, float r, float g, float b, float a)
 	{
-		Cheats::initalize();
-	}
-
-	std::cout << "entlist: " << entityList << std::endl;
-
-	if (run)
-	{
-		memcpy(&VM, (PBYTE*)viewMatrix, sizeof(VM));
-
-		for (int i = 0; i < entities.size(); i++)
+		if (!initalized)
 		{
-			if (entities.at(i) != nullptr)
+			initalize();
+		}
+
+		std::cout << "entlist: " << entityList << std::endl;
+
+		if (run)
+		{
+			memcpy(&VM, (PBYTE*)viewMatrix, sizeof(VM));
+
+			//SA: basically the same as
+			//	for(int i = 0; i != entities.size(); ++i)
+			//	{
+			//		const auto& e = entities.at(i);
+			//		...
+			//	};
+			for (const auto& e : entities)
 			{
-				vec2 vScreen;
-				if (worldToScreenDXtoOGL(entities.at(i)->xyz, vScreen, VM, width, height))
+				if (e != nullptr)
 				{
-					if (entities.at(i) != nullptr)
+					vec2 vScreen{};
+					if (worldToScreenDXtoOGL(e->xyz, vScreen, VM, width, height))
 					{
 						drawBox(vScreen.x, vScreen.y, 60.0f, 120.0f, thicc, r, g, b, a);
 					}
@@ -135,64 +135,58 @@ void Cheats::ESPBox(bool run, int width, int height, float thicc, float r, float
 			}
 		}
 	}
-}
 
-void Cheats::ESPText(bool ESPText, bool range, int width, int height, const char* text, float r, float g, float b, float a)
-{
-	if (!initalized)
+	void ESPText(bool ESPText, bool range, int width, int height, const char* text, float r, float g, float b, float a)
 	{
-		Cheats::initalize();
-	}
-	if (ESPText || range)
-	{
-		memcpy(&VM, (PBYTE*)viewMatrix, sizeof(VM));
-
-		for (int i = 0; i < entities.size(); i++)
+		if (!initalized)
 		{
-			if (entities.at(i) != nullptr)
-			{
-				vec2 vScreen;
-				if (worldToScreen(entities.at(i)->xyz, vScreen, VM, width, height))
-				{
-					if (entities.at(i) != nullptr)
-					{
-						if (ESPText)
-							drawString(entities.at(i)->namePtr->name, vScreen.x, vScreen.y, r, g, b, a);
-						if (range)
-						{
-							float dist = findDistance(localPlayer->xyz, entities.at(i)->xyz);
-							dist = dist / 100;
-							if (dist > 250.0f)
-							{
-								entities.at(i) = nullptr;
-							}
-							std::ostringstream ss;
-							ss << dist;
-							std::string s(ss.str());
-							s = s + " m";
-							char char_array[30];
-							strcpy(char_array, s.c_str());
+			initalize();
+		}
+		if (ESPText || range)
+		{
+			memcpy(&VM, (PBYTE*)viewMatrix, sizeof(VM));
 
-							drawString(char_array, vScreen.x, vScreen.y + 14.0f, r, g, b, a);
+			for (int i = 0; i < entities.size(); i++)
+			{
+				if (entities.at(i) != nullptr)
+				{
+					vec2 vScreen;
+					if (worldToScreen(entities.at(i)->xyz, vScreen, VM, width, height))
+					{
+						if (entities.at(i) != nullptr)
+						{
+							if (ESPText)
+								drawString(entities.at(i)->namePtr->name, vScreen.x, vScreen.y, r, g, b, a);
+							if (range)
+							{
+								float dist = findDistance(localPlayer->xyz, entities.at(i)->xyz);
+								dist = dist / 100;
+								if (dist > 250.0f)
+								{
+									entities.at(i) = nullptr;
+								}
+								auto s = std::to_string(dist) + " m";
+								drawString(s.c_str(), vScreen.x, vScreen.y + 14.0f, r, g, b, a);
+							}
 						}
 					}
 				}
 			}
 		}
 	}
-}
 
-void Cheats::Teleport(vec3 cordinates)
-{
-	if (!initalized)
+	void Teleport(vec3 cordinates)
 	{
-		Cheats::initalize();
+		if (!initalized)
+		{
+			Cheats::initalize();
+		}
+		if (localPlayerCordinates != nullptr)
+		{
+			localPlayerCordinates->xyz = cordinates;
+		}
 	}
-	if (localPlayerCordinates != nullptr)
-	{
-		localPlayerCordinates->xyz = cordinates;
-	}
-}
+};
 
 vec3 getPlayerPos()
 {
@@ -207,9 +201,6 @@ vec3 getPlayerPos()
 	}
 	return localPlayerCordinates->xyz;
 }
-
-
-
 
 // Helper functions
 
@@ -314,7 +305,6 @@ bool rewriteOrigBytesLocalPlayerCordinates(void* toWriteBack, int len)
 	DWORD curProtection;
 	VirtualProtect(toWriteBack, len, PAGE_EXECUTE_READWRITE, &curProtection);
 	unsigned char orig[] = {
-
 		0x4d, 0x89, 0xcc,									//mov r12, r9
 		0x48, 0x8b, 0x49, 0x20,								//mov rcx,[rcx + 0x20]
 		0x4c, 0x8d, 0x4c, 0x24, 0x30,						//lea r9,[rsp + 0x30]
@@ -327,7 +317,6 @@ bool rewriteOrigBytesLocalPlayerCordinates(void* toWriteBack, int len)
 	VirtualProtect(toWriteBack, len, curProtection, &temp);
 	return true;
 }
-
 
 MODULEINFO GetModuleInfo(const wchar_t* szModule)
 {
@@ -387,7 +376,7 @@ bool worldToScreenDXtoOGL(vec3 pos, vec2& screen, float matrix[16], int windowWi
 bool worldToScreen(vec3 pos, vec2& screen, float matrix[16], int windowWidth, int windowHeight)
 {
 	//Matrix-vector Product, multiplying world(eye) coordinates by projection matrix = clipCoords
-	vec4 clipCoords;
+	vec4 clipCoords{};
 	clipCoords.x = pos.x * matrix[0] + pos.y * matrix[1] + pos.z * matrix[2] + matrix[3];
 	clipCoords.y = pos.x * matrix[4] + pos.y * matrix[5] + pos.z * matrix[6] + matrix[7];
 	clipCoords.z = pos.x * matrix[8] + pos.y * matrix[9] + pos.z * matrix[10] + matrix[11];
@@ -397,7 +386,7 @@ bool worldToScreen(vec3 pos, vec2& screen, float matrix[16], int windowWidth, in
 		return false;
 
 	//perspective division, dividing by clip.W = Normalized Device Coordinates
-	vec3 NDC;
+	vec3 NDC{};
 	NDC.x = clipCoords.x / clipCoords.w;
 	NDC.y = clipCoords.y / clipCoords.w;
 	NDC.z = clipCoords.z / clipCoords.w;
