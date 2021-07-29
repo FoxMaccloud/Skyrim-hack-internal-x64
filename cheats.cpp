@@ -4,10 +4,11 @@
 
 // Declare helper functions
 void* detourFunction(void* pSource, void* pDestination, int dwLen);
-bool Detour64(BYTE* src, BYTE* dst, const uintptr_t len);
+void* detour64(void* pSource, void* pDestination, int dwLen);
 bool hookPushRax(void* toHook, void* hk_func, int len);
 bool rewriteOrigBytesEntList(void* toWriteBack, int len = 18);
 bool rewriteOrigBytesLocalPlayerCordinates(void* toWriteBack, int len = 27);
+bool rewriteOrigBytesSpeedHack(void* toWriteBack, int len = 16);
 MODULEINFO GetModuleInfo(const wchar_t* szModule);
 uintptr_t FindPattern(const wchar_t* module, const char* pattern, const char* mask);
 bool worldToScreenDXtoOGL(vec3 pos, vec2& screen, float matrix[16], int windowWidth, int windowHeight);
@@ -19,9 +20,9 @@ HWND handle;
 uintptr_t moduleBase;
 uintptr_t entityList;
 uintptr_t localPlayerCordinatesPtr;
+uintptr_t localPlayerSpeedPtr;
 uintptr_t viewMatrix;
 uintptr_t localPlayerPtr;
-playerEnt* localPlayer;
 
 
 
@@ -58,6 +59,36 @@ bool Cheats::initalize()
 	jmpBacklocalPlayerCordinatesPtr = (uintptr_t)localPlayerCordinatesPtr + 27;
 	hookPushRax((void*)localPlayerCordinatesPtr, (void*)playerCords, 27);
 
+	do
+	{
+		//localPlayerSpeedPtr = FindPattern(
+		//	L"SkyrimSE.exe",
+		//	"\xF3\x0F\x10\x87\xB0\x00\x00\x00\xF3\x0F\x11\x8D\x10\x01\x00\x00",
+		//	"xxxxxxxxxxxxxxxx"
+		//);
+		//localPlayerSpeedPtr = FindPattern(
+		//	L"SkyrimSE.exe",
+		//	"\xF3\x0F\x11\x8D\x10\x01\x00\x00\xF3\x0F\x10\x9D\x10\x01\x00\x00",
+		//	"xxxxxxxxxxxxxxxx"
+		//);
+		//localPlayerSpeedPtr = FindPattern(
+		//	L"SkyrimSE.exe",
+		//	"\xF3\x44\x0F\x11\x86\xB4\x00\x00\x00\xF3\x0F\x59\xF0\xF3\x0F\x11\xB6\xB8\x00\x00\x00",
+		//	"xxxxxxxxxxxxxxxxxxxxx"
+		//);
+		localPlayerSpeedPtr = FindPattern(
+			L"SkyrimSE.exe",
+			"\xF3\x0F\x11\x8D\x10\x01\x00\x00\xF3\x0F\x10\x9D\x10\x01\x00\x00",
+			"xxxxxxxxxxxxxxxx"
+		);
+	} while (!localPlayerSpeedPtr);
+
+	jmpBacklocalPlayerSpeedPtr = localPlayerSpeedPtr + 16;
+	detour64((void*)localPlayerSpeedPtr, (void*)speedHack, 16);
+	//detour64((void*)localPlayerSpeedPtr, (void*)speedHack, 17);
+
+
+
 	moduleBase = (uintptr_t)info.lpBaseOfDll;
 
 	viewMatrix = moduleBase + 0x2F4C910;
@@ -70,8 +101,12 @@ bool Cheats::initalize()
 
 bool Cheats::shutdown()
 {
-	if ((rewriteOrigBytesEntList((void*)entityList, 18)) && 
-		(rewriteOrigBytesLocalPlayerCordinates((void*)localPlayerCordinatesPtr, 27)))
+	// TODO: Fix me!
+	if (
+			(rewriteOrigBytesEntList((void*)entityList, 18)) && 
+			(rewriteOrigBytesLocalPlayerCordinates((void*)localPlayerCordinatesPtr, 27)) &&
+			(rewriteOrigBytesSpeedHack((void*)localPlayerSpeedPtr, 16))
+		)
 		return true;
 	return false;
 }
@@ -137,7 +172,7 @@ void Cheats::ESPBox(bool run, int width, int height, float thicc, float r, float
 	}
 }
 
-void Cheats::ESPText(bool ESPText, bool range, int width, int height, const char* text, float r, float g, float b, float a)
+void Cheats::ESPText(bool ESPText, bool range, int width, int height, float r, float g, float b, float a)
 {
 	if (!initalized)
 	{
@@ -166,14 +201,8 @@ void Cheats::ESPText(bool ESPText, bool range, int width, int height, const char
 							{
 								entities.at(i) = nullptr;
 							}
-							std::ostringstream ss;
-							ss << dist;
-							std::string s(ss.str());
-							s = s + " m";
-							char char_array[30];
-							strcpy(char_array, s.c_str());
-
-							drawString(char_array, vScreen.x, vScreen.y + 14.0f, r, g, b, a);
+							std::string ss = std::to_string(dist) + " m";
+							drawString(ss.c_str(), vScreen.x, vScreen.y + 14.0f, r, g, b, a);
 						}
 					}
 				}
@@ -193,6 +222,13 @@ void Cheats::Teleport(vec3 cordinates)
 		localPlayerCordinates->xyz = cordinates;
 	}
 }
+
+void Cheats::SpeedHack(bool run, float speed)
+{
+	moveSpeed = speed;
+	speedHackOn = run;
+}
+
 
 vec3 getPlayerPos()
 {
@@ -249,23 +285,40 @@ void* detourFunction(void* pSource, void* pDestination, int dwLen)
 	return (void*)((DWORD_PTR)pSource + dwLen);
 }
 
-bool Detour64(BYTE* src, BYTE* dst, const uintptr_t len)
+void* detour64(void* pSource, void* pDestination, int dwLen)
 {
-	if (len < 14) return false;
+	DWORD MinLen = 14;
 
-	DWORD curProtection;
-	VirtualProtect(src, len, PAGE_EXECUTE_READWRITE, &curProtection);
+	if (dwLen < MinLen) return NULL;
 
-	*(uintptr_t*)((uintptr_t)src) = (uintptr_t)0x25ff;
-	memcpy_s(src + 6, 8, &dst, 8);
+	BYTE stub[] = {
+	0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ptr [$+6]
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // ptr
+	};
 
-	if (len > 14)
+	void* pTrampoline = VirtualAlloc(0, dwLen + sizeof(stub), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+
+	DWORD dwOld = 0;
+	VirtualProtect(pSource, dwLen, PAGE_EXECUTE_READWRITE, &dwOld);
+
+	DWORD64 retto = (DWORD64)pSource + dwLen;
+
+	// trampoline
+	memcpy(stub + 6, &retto, 8);
+	memcpy((void*)((DWORD_PTR)pTrampoline), pSource, dwLen);
+	memcpy((void*)((DWORD_PTR)pTrampoline + dwLen), stub, sizeof(stub));
+
+	// orig
+	memcpy(stub + 6, &pDestination, 8);
+	memcpy(pSource, stub, sizeof(stub));
+
+	for (int i = MinLen; i < dwLen; i++)
 	{
-		memset(src + 14, '\x90', len - 14);
+		*(BYTE*)((DWORD_PTR)pSource + i) = 0x90;
 	}
 
-	VirtualProtect(src, len, curProtection, &curProtection);
-	return true;
+	VirtualProtect(pSource, dwLen, dwOld, &dwOld);
+	return (void*)((DWORD_PTR)pTrampoline);
 }
 
 bool hookPushRax(void* toHook, void* hk_func, int len)
@@ -321,6 +374,20 @@ bool rewriteOrigBytesLocalPlayerCordinates(void* toWriteBack, int len)
 		0x48, 0x89, 0xd3,									//mov rbx, rdx
 		0x0f, 0x29, 0xb4, 0x24, 0xd0, 0x00, 0x00, 0x00,		//movaps[rsp + 0xD0], xmm6
 		0x49, 0x8b, 0x46, 0x10								//mov rax,[r14 + 0x10]
+	};
+	memcpy((void*)toWriteBack, orig, sizeof(orig));
+	DWORD temp;
+	VirtualProtect(toWriteBack, len, curProtection, &temp);
+	return true;
+}
+
+bool rewriteOrigBytesSpeedHack(void* toWriteBack, int len)
+{
+	DWORD curProtection;
+	VirtualProtect(toWriteBack, len, PAGE_EXECUTE_READWRITE, &curProtection);
+	unsigned char orig[] = {
+		0xF3, 0x0F, 0x11, 0x8D, 0x10, 0x01, 0x00, 0x00,			//movss [rbp+0x00000110], xmm1
+		0xF3, 0x0F, 0x10, 0x9D, 0x10, 0x01, 0x00, 0x00			//movss xmm3, [rbp + 0x00000110]
 	};
 	memcpy((void*)toWriteBack, orig, sizeof(orig));
 	DWORD temp;

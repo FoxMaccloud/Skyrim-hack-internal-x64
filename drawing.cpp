@@ -7,16 +7,10 @@ unsigned int shader;
 bool createdShader = false;
 
 
-template <typename T, typename W>
-float pixToPointWidth(T x, W width)
+template <typename T, typename WH>
+float pixToPoint(T xy, WH widthHight)
 {
-    return ((2*(x)/width)-1);
-}
-
-template <typename T, typename H>
-float pixToPointHeight(T y, H height)
-{
-    return ((2*(y) / height) - 1);
+    return ((2 * (xy) / widthHight) - 1);
 }
 
 
@@ -96,10 +90,10 @@ void createShader()
 //float pos[12];
 void drawLine(float x1, float y1, float x2, float y2, float lineWidth, float r, float g, float b, float a)
 {
-    x1 = pixToPointWidth(x1, width);
-    y1 = pixToPointHeight(y1, height);
-    x2 = pixToPointWidth(x2, width);
-    y2 = pixToPointHeight(y2, height);
+    x1 = pixToPoint(x1, width);
+    y1 = pixToPoint(y1, height);
+    x2 = pixToPoint(x2, width);
+    y2 = pixToPoint(y2, height);
 
     //pos[0]  =   { x1 };
     //pos[1]  =   { y1 };

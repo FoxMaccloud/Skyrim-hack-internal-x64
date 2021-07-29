@@ -1,5 +1,11 @@
 #include "includes.h"
 
+class localPlayerBase
+{
+public:
+	class playerEnt* playerEnt; //0x0000
+}; //Size: 0x0008
+
 class playerEnt
 {
 public:
@@ -8,8 +14,9 @@ public:
 	class locationPtrClass* locationPtr; //0x0060
 	char pad_0068[392]; //0x0068
 	class namePtrClass* namePtr; //0x01F0
-	char pad_01F8[584]; //0x01F8
-}; //Size: 0x0440
+	char pad_0238[3160]; //0x0238
+	class accelerationBase* accelerationBase; //0x0E50
+};
 
 class locationPtrClass
 {
@@ -26,6 +33,18 @@ public:
 	char* name; //0x0028
 	char pad_0030[24]; //0x0030
 }; //Size: 0x0048
+
+
+class accelerationBase
+{
+public:
+	char pad_0000[176]; //0x0000
+	float rightLeftSpeed; //0x00B0
+	float forwardBackwardSpeed; //0x00B4
+};
+
+playerEnt* localPlayer;
+
 
 std::vector<playerEnt*> entities;
 //playerEnt* ents[255];
@@ -133,70 +152,101 @@ __declspec(naked) void playerCords()
 		mov rbx, rdx
 		movaps [rsp + 0xD0], xmm6
 		mov rax, [r14 + 0x10]
-		//
 		jmp [jmpBacklocalPlayerCordinatesPtr]
 	}
 }
 
+//class currentEnt
+//{
+//public:
+//	uintptr_t self;
+//};
 
-//extern "C" void hook(uintptr_t EntityObjStart);
-//extern "C" void getEntities(uintptr_t entityObjStart, playerEnt* entsptr);
-//extern "C" void giveUp();
-//extern "C" void entityHook(playerEnt* entsptr);
+uintptr_t jmpBacklocalPlayerSpeedPtr = 0x0;
+//currentEnt* currentEntUpdateSpeed;
+accelerationBase* currentEntUpdateSpeed;
+float moveSpeed  = 20.0f;
+bool speedHackOn = false;
+// Modern Problems require Stupid Solutions or something like that...
+float savexmm0;
+float savexmm1;
+float savexmm2;
+float savexmm3;
+float savexmm4;
+float savexmm5;
+float savexmm6;
+float savexmm7;
+float savexmm8;
 
-//__attribute__((naked)) void setObjStart()
-//{
-//
-//	__asm {
-//		// Not neccesary as the hook will fix the stolen bytes.
-//		//movss xmm10, [rdi + 0x54]
-//		//movss xmm11, [rdi + 0x58]
-//		mov entityObjStart, rdi
-//		push rax
-//		push rcx
-//		push rdx
-//		push rbx
-//		push rsp
-//		push rbp
-//		push rsi
-//		push rdi
-//		push r8
-//		push r9
-//		push r10
-//		push r11
-//		push r12
-//		push r13
-//		push r14
-//		push r15
-//	}
-//}
-//
-//__attribute__((naked)) void setEntsptr()
-//{
-//	__asm {
-//		mov rax, entityObjStart
-//		mov[entsptr], rax
-//	}
-//}
-//
-//__attribute__((naked)) void giveUp()
-//{
-//	__asm {
-//		pop r15
-//		pop r14
-//		pop r13
-//		pop r12
-//		pop r11
-//		pop r10
-//		pop r9
-//		pop r8
-//		pop rdi
-//		pop rsi
-//		pop rbp
-//		pop rsp
-//		pop rbx
-//		pop rdx
-//		pop rcx
-//		pop rax
-//	}
-//}
+__declspec(naked) void speedHack()
+{
+	__asm {
+
+		mov[currentEntUpdateSpeed], rdi
+
+		push rax; save current rax
+		push rbx; save current rbx
+		push rcx; save current rcx
+		push rdx; save current rdx
+		push rbp; save current rbp
+		push rdi; save current rdi
+		push rsi; save current rsi
+		push r8; save current r8
+		push r9; save current r9
+		push r10; save current r10
+		push r11; save current r11
+		push r12; save current r12
+		push r13; save current r13
+		push r14; save current r14
+		push r15; save current r15
+		movss[savexmm0], xmm0
+		movss[savexmm2], xmm2
+		movss[savexmm3], xmm3
+		movss[savexmm4], xmm4
+		movss[savexmm5], xmm5
+		movss[savexmm6], xmm6
+		movss[savexmm7], xmm7
+		movss[savexmm8], xmm8
+	}
+
+	if ((speedHackOn) &&
+		(localPlayer->accelerationBase->forwardBackwardSpeed > 1.0f) &&
+		(localPlayer->accelerationBase == currentEntUpdateSpeed))
+	{
+		localPlayer->accelerationBase->forwardBackwardSpeed = moveSpeed;
+	}
+
+	__asm {
+		pop r15; restore current r15
+		pop r14; restore current r14
+		pop r13; restore current r13
+		pop r12; restore current r12
+		pop r11; restore current r11
+		pop r10; restore current r10
+		pop r9; restore current r9
+		pop r8; restore current r8
+		pop rsi; restore current rsi
+		pop rdi; restore current rdi
+		pop rbp; restore current rbp
+		pop rdx; restore current rdx
+		pop rcx; restore current rcx
+		pop rbx; restore current rbx
+		pop rax; restore current rax
+		movss xmm8, [savexmm8]
+		movss xmm7, [savexmm7]
+		movss xmm6, [savexmm6]
+		movss xmm5, [savexmm5]
+		movss xmm4, [savexmm4]
+		movss xmm3, [savexmm3]
+		movss xmm2, [savexmm2]
+		movss xmm0, [savexmm0]
+	}
+
+	__asm {
+		movss xmm1, [rdi + 0x000000B4]
+		movss [rbp+0x00000110], xmm1
+		movss xmm3, [rbp + 0x00000110]
+
+		jmp [jmpBacklocalPlayerSpeedPtr]
+	}
+}

@@ -145,7 +145,10 @@ static bool ESPRange = false;
 // Movement
 vec3 currentPosVec3;
 static bool teleport = false;
+static bool speedHack = false;
+static float speed = 20.0f;
 
+// Debug
 static bool debugConsole = false;
 FILE* f;
 
@@ -234,6 +237,11 @@ void Menu::Render()
                 Cheats::Teleport(cords);
                 teleport = false;
             }
+
+            ImGui::Text("SpeedHack");
+            ImGui::SliderFloat("Speedhack##slider", &speed, 0.0f, 500.0f, "%.1f");
+            ImGui::Checkbox("Speedhack", &speedHack);
+
             ImGui::EndTabItem();
         }
 
@@ -266,7 +274,7 @@ void Menu::Render()
 
 
 
-    Cheats::ESPText(ESPText, ESPRange, width, height, "TEST", textR, textG, textB, textA);
+    Cheats::ESPText(ESPText, ESPRange, width, height, textR, textG, textB, textA);
 
 
     // Rendering
@@ -277,7 +285,7 @@ void Menu::Render()
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    
+    Cheats::SpeedHack(speedHack, speed);
     Cheats::ESPLines(ESPLines, width, height, lineThickness, lineR, lineG, lineB, lineA);
     Cheats::ESPBox(ESPBox, width, height, boxThicc, boxR, boxG, boxB, boxA);
     
