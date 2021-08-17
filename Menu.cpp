@@ -231,9 +231,9 @@ void Menu::Render()
 
             vec3 cords = { currentPos[0], currentPos[1], currentPos[2] };
             if (ImGui::InputFloat3("XYZ", currentPos))
-                teleport = true;    
+                teleport = true;
             if (ImGui::Button("Go!"))
-            {
+            { 
                 Cheats::Teleport(cords);
                 teleport = false;
             }

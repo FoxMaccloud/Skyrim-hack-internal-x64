@@ -38,7 +38,9 @@ public:
 class accelerationBase
 {
 public:
-	char pad_0000[176]; //0x0000
+	char pad_0000[152]; //0x0000
+	float upDown; //0x0098
+	char pad_009C[20]; //0x009C
 	float rightLeftSpeed; //0x00B0
 	float forwardBackwardSpeed; //0x00B4
 };
@@ -202,10 +204,10 @@ __declspec(naked) void speedHack()
 		movss[savexmm0], xmm0
 		movss[savexmm2], xmm2
 		movss[savexmm3], xmm3
-		movss[savexmm4], xmm4
-		movss[savexmm5], xmm5
-		movss[savexmm6], xmm6
-		movss[savexmm7], xmm7
+		//movss[savexmm4], xmm4
+		//movss[savexmm5], xmm5
+		//movss[savexmm6], xmm6
+		//movss[savexmm7], xmm7
 		movss[savexmm8], xmm8
 	}
 
@@ -233,10 +235,10 @@ __declspec(naked) void speedHack()
 		pop rbx; restore current rbx
 		pop rax; restore current rax
 		movss xmm8, [savexmm8]
-		movss xmm7, [savexmm7]
-		movss xmm6, [savexmm6]
-		movss xmm5, [savexmm5]
-		movss xmm4, [savexmm4]
+		//movss xmm7, [savexmm7]
+		//movss xmm6, [savexmm6]
+		//movss xmm5, [savexmm5]
+		//movss xmm4, [savexmm4]
 		movss xmm3, [savexmm3]
 		movss xmm2, [savexmm2]
 		movss xmm0, [savexmm0]

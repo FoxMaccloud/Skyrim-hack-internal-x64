@@ -127,12 +127,12 @@ void Cheats::ESPLines(bool run, int width, int height, float lineWidth, float r,
 
 		for (int i = 0; i < entities.size(); i++)
 		{
-			if (entities.at(i) != nullptr)
+			if ((entities.at(i) != nullptr))
 			{
 				vec2 vScreen;
 				if (worldToScreenDXtoOGL(entities.at(i)->xyz, vScreen, VM, width, height))
 				{
-					if (entities.at(i) != nullptr)
+					if ((entities.at(i) != nullptr))
 					{
 						drawLine(width / 2, 0, vScreen.x, vScreen.y, lineWidth, r, g, b, a);
 					}
@@ -157,12 +157,12 @@ void Cheats::ESPBox(bool run, int width, int height, float thicc, float r, float
 
 		for (int i = 0; i < entities.size(); i++)
 		{
-			if (entities.at(i) != nullptr)
+			if ((entities.at(i) != nullptr))
 			{
 				vec2 vScreen;
 				if (worldToScreenDXtoOGL(entities.at(i)->xyz, vScreen, VM, width, height))
 				{
-					if (entities.at(i) != nullptr)
+					if ((entities.at(i) != nullptr))
 					{
 						drawBox(vScreen.x, vScreen.y, 60.0f, 120.0f, thicc, r, g, b, a);
 					}
@@ -184,12 +184,12 @@ void Cheats::ESPText(bool ESPText, bool range, int width, int height, float r, f
 
 		for (int i = 0; i < entities.size(); i++)
 		{
-			if (entities.at(i) != nullptr)
+			if ((entities.at(i) != nullptr))
 			{
 				vec2 vScreen;
 				if (worldToScreen(entities.at(i)->xyz, vScreen, VM, width, height))
 				{
-					if (entities.at(i) != nullptr)
+					if ((entities.at(i) != nullptr) && (entities.at(i)->namePtr->name != NULL))
 					{
 						if (ESPText)
 							drawString(entities.at(i)->namePtr->name, vScreen.x, vScreen.y, r, g, b, a);
@@ -197,7 +197,7 @@ void Cheats::ESPText(bool ESPText, bool range, int width, int height, float r, f
 						{
 							float dist = findDistance(localPlayer->xyz, entities.at(i)->xyz);
 							dist = dist / 100;
-							if (dist > 250.0f)
+							if (dist > 160.0f || dist < 0.1f)
 							{
 								entities.at(i) = nullptr;
 							}

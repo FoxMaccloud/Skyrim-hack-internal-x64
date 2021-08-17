@@ -4,6 +4,19 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
+#include <Windows.h>
+#include <stdio.h>
+#include <iostream>
+//#include <TlHelp32.h>
+#include <d3d9.h>
+#include <Psapi.h>
+#include <time.h>
+//#include "hooks.h"
+#include <vector>
+#include <TlHelp32.h>
+#include <cmath>
+
+
 struct vec4
 {
 	float x, y, z, w;
@@ -16,14 +29,3 @@ struct vec2
 {
 	int x, y;
 };
-
-#include <Windows.h>
-#include <stdio.h>
-#include <iostream>
-//#include <TlHelp32.h>
-#include <d3d9.h>
-#include <Psapi.h>
-#include <time.h>
-//#include "hooks.h"
-#include <vector>
-#include <TlHelp32.h>
