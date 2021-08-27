@@ -45,6 +45,15 @@ public:
 	float forwardBackwardSpeed; //0x00B4
 };
 
+float findDistance(vec3 self, vec3 entity)
+{
+	float x = (entity.x - self.x);
+	float y = (entity.y - self.y);
+	float z = (entity.z - self.z);
+	float dist = (x * x) + (y * y) + (z * z);
+	return (sqrt(dist));
+}
+
 playerEnt* localPlayer;
 
 
@@ -53,6 +62,7 @@ std::vector<playerEnt*> entities;
 playerEnt* entsptr;
 uintptr_t entityObjStart = 0x0;
 uintptr_t jmpBackAddyEntityList = 0x0;
+float distEnt;
 
 __declspec(naked) void entHook()
 {
@@ -91,6 +101,15 @@ __declspec(naked) void entHook()
 	{
 		goto GIVE_UP;
 	}
+
+	distEnt = findDistance(localPlayer->xyz, entsptr->xyz);
+	distEnt = distEnt / 100;
+	if (distEnt > 160.0f || distEnt < 0.1f)
+	{
+		goto GIVE_UP;
+	}
+
+
 
 	for (int i = 0; i < entities.size(); i++)
 	{

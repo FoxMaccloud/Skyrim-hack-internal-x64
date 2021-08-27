@@ -39,7 +39,7 @@ void getWindowSize()
 void Menu::Initialize()
 {
     running = true;
-    menuShow = false;
+    menuShow = true;
 
     hwnd = find_main_window();
     //hwnd = FindWindow(0, L"Skyrim Special Edition");
@@ -179,6 +179,10 @@ void Menu::Render()
             {
                 running = false;
             }
+            ImGui::Text("INS to open/close the menu");
+
+            ImGui::Text("V 0.3.5");
+
             ImGui::EndTabItem();
         }
 
@@ -239,7 +243,7 @@ void Menu::Render()
             }
 
             ImGui::Text("SpeedHack");
-            ImGui::SliderFloat("Speedhack##slider", &speed, 0.0f, 500.0f, "%.1f");
+            ImGui::SliderFloat("Speed##slider", &speed, 0.0f, 500.0f, "%.1f");
             ImGui::Checkbox("Speedhack", &speedHack);
 
             ImGui::EndTabItem();

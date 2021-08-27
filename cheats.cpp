@@ -160,11 +160,29 @@ void Cheats::ESPBox(bool run, int width, int height, float thicc, float r, float
 			if ((entities.at(i) != nullptr))
 			{
 				vec2 vScreen;
+				vec2 vScreenBones;
 				if (worldToScreenDXtoOGL(entities.at(i)->xyz, vScreen, VM, width, height))
 				{
 					if ((entities.at(i) != nullptr))
 					{
-						drawBox(vScreen.x, vScreen.y, 60.0f, 120.0f, thicc, r, g, b, a);
+
+						//if (worldToScreenDXtoOGL(entities.at(i)->bones, vScreenBones, VM, width, height))
+						//{
+						//	//float dist = findDistance(localPlayer->xyz, entities.at(i)->xyz);
+
+						//	float tmp1 = pow((vScreenBones.x - vScreen.x), 2);
+						//	float tmp2 = pow((vScreenBones.y - vScreen.y), 2);
+
+						//	float h = (float)(sqrt(tmp1 + tmp2));
+						//	float w = h / 2;
+
+						//}
+
+						// Temp values
+						float w = 60.0f;
+						float h = 120.0f;
+
+						drawBox(vScreen.x, vScreen.y, w, h, thicc, r, g, b, a);
 					}
 				}
 			}
@@ -368,12 +386,12 @@ bool rewriteOrigBytesLocalPlayerCordinates(void* toWriteBack, int len)
 	VirtualProtect(toWriteBack, len, PAGE_EXECUTE_READWRITE, &curProtection);
 	unsigned char orig[] = {
 
-		0x4d, 0x89, 0xcc,									//mov r12, r9
-		0x48, 0x8b, 0x49, 0x20,								//mov rcx,[rcx + 0x20]
-		0x4c, 0x8d, 0x4c, 0x24, 0x30,						//lea r9,[rsp + 0x30]
-		0x48, 0x89, 0xd3,									//mov rbx, rdx
-		0x0f, 0x29, 0xb4, 0x24, 0xd0, 0x00, 0x00, 0x00,		//movaps[rsp + 0xD0], xmm6
-		0x49, 0x8b, 0x46, 0x10								//mov rax,[r14 + 0x10]
+		0x4D, 0x8B, 0xE1,									//mov r12, r9
+		0x48, 0x8B, 0x49, 0x20,								//mov rcx,[rcx + 0x20]
+		0x4C, 0x8D, 0x4C, 0x24, 0x30,						//lea r9,[rsp + 0x30]
+		0x48, 0x8B, 0xDA,									//mov rbx, rdx
+		0x0F, 0x29, 0xB4, 0x24, 0xD0, 0x00, 0x00, 0x00,		//movaps[rsp + 0xD0], xmm6
+		0x49, 0x8B, 0x46, 0x10								//mov rax,[r14 + 0x10]
 	};
 	memcpy((void*)toWriteBack, orig, sizeof(orig));
 	DWORD temp;
@@ -502,13 +520,4 @@ HWND find_main_window()
 	EnumWindows(enum_windows_callback, reinterpret_cast<LPARAM>(&data));
 
 	return data.window_handle;
-}
-
-float findDistance(vec3 self, vec3 entity)
-{
-	float x = (entity.x - self.x);
-	float y = (entity.y - self.y);
-	float z = (entity.z - self.z);
-	float dist = (x * x) + (y * y) + (z * z);
-	return (sqrt(dist));
 }

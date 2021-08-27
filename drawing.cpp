@@ -1,4 +1,5 @@
 #include "drawing.h"
+#include "cheats.h"
 
 extern int width;
 extern int height;
@@ -145,8 +146,6 @@ void drawBox(float x, float y, float w, float h, float thicc, float r, float g, 
     drawLine(x + w / 2, y + h, x - w / 2, y + h, thicc, r, g, b, a);
     drawLine(x - w / 2, y + h, x - w / 2, y, thicc, r, g, b, a);
 }
-
-
 
 //ImGuiWindow* window = nullptr;
 void drawString(const char* string, float x, float y, float r, float g, float b, float a)
