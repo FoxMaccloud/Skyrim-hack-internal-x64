@@ -181,7 +181,7 @@ void Menu::Render()
             }
             ImGui::Text("INS to open/close the menu");
 
-            ImGui::Text("V 0.3.5");
+            ImGui::Text("V 0.3.8");
 
             ImGui::EndTabItem();
         }

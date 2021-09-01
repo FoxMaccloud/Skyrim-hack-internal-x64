@@ -30,5 +30,7 @@ struct vec2
 	int x, y;
 };
 
+#define realCordsScale 70.753f
+
 #define ABS(x) ((x < 0) ? (-x) : (x))
 #define TORAD(x) ((x) * 0.01745329252)

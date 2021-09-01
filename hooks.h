@@ -12,7 +12,10 @@ public:
 	char pad_0000[84]; //0x0000
 	vec3 xyz; //0x0054
 	class locationPtrClass* locationPtr; //0x0060
-	char pad_0068[392]; //0x0068
+	void* validationPtr1; //0x0068
+	void* validationPtr2; //0x0070
+	void* validationPtr3; //0x0078
+	char pad_0080[368]; //0x0080
 	class namePtrClass* namePtr; //0x01F0
 	char pad_0238[3160]; //0x0238
 	class accelerationBase* accelerationBase; //0x0E50
@@ -66,6 +69,14 @@ float distEnt;
 
 __declspec(naked) void entHook()
 {
+	if (entities.size() < 1)
+	{
+		entities.resize(256, nullptr);
+	}
+	//if (entities.size() <= entities.capacity())
+	//{
+	//	entities.resize(entities.size()*2, nullptr);
+	//}
 
 	__asm {
 		// orig rax got pushed onto the stack, RAX is currently the address to this func.
@@ -97,7 +108,7 @@ __declspec(naked) void entHook()
 
 	bool alreadyThere = false;
 
-	if (entsptr == nullptr)
+	if (entsptr == nullptr || localPlayer == nullptr)
 	{
 		goto GIVE_UP;
 	}
@@ -109,13 +120,10 @@ __declspec(naked) void entHook()
 		goto GIVE_UP;
 	}
 
-
-
 	for (int i = 0; i < entities.size(); i++)
 	{
 		if (entities.at(i) == entsptr)
 		{
-			entities.at(i) = entsptr; // insert
 			alreadyThere = true;
 			break;
 		}
@@ -127,7 +135,14 @@ __declspec(naked) void entHook()
 	}
 	else
 	{
-		entities.push_back(entsptr);
+		for (int i = 0; i < entities.size(); i++)
+		{
+			if (entities.at(i) == nullptr)
+			{
+				entities.at(i) = entsptr; // insert
+				break;
+			}
+		}
 	}
 
 GIVE_UP:
@@ -222,19 +237,19 @@ __declspec(naked) void speedHack()
 		push r15; save current r15
 		movss[savexmm0], xmm0
 		movss[savexmm2], xmm2
-		movss[savexmm3], xmm3
+		//movss[savexmm3], xmm3
 		//movss[savexmm4], xmm4
 		//movss[savexmm5], xmm5
 		//movss[savexmm6], xmm6
 		//movss[savexmm7], xmm7
-		movss[savexmm8], xmm8
+		//movss[savexmm8], xmm8
 	}
 
 	if ((speedHackOn) &&
 		(localPlayer->accelerationBase->forwardBackwardSpeed > 1.0f) &&
 		(localPlayer->accelerationBase == currentEntUpdateSpeed))
 	{
-		localPlayer->accelerationBase->forwardBackwardSpeed = moveSpeed;
+		localPlayer->accelerationBase->forwardBackwardSpeed += moveSpeed;
 	}
 
 	__asm {
@@ -253,12 +268,12 @@ __declspec(naked) void speedHack()
 		pop rcx; restore current rcx
 		pop rbx; restore current rbx
 		pop rax; restore current rax
-		movss xmm8, [savexmm8]
+		//movss xmm8, [savexmm8]
 		//movss xmm7, [savexmm7]
 		//movss xmm6, [savexmm6]
 		//movss xmm5, [savexmm5]
 		//movss xmm4, [savexmm4]
-		movss xmm3, [savexmm3]
+		//movss xmm3, [savexmm3]
 		movss xmm2, [savexmm2]
 		movss xmm0, [savexmm0]
 	}

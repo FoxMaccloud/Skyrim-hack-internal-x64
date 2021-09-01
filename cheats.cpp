@@ -14,6 +14,7 @@ uintptr_t FindPattern(const wchar_t* module, const char* pattern, const char* ma
 bool worldToScreenDXtoOGL(vec3 pos, vec2& screen, float matrix[16], int windowWidth, int windowHeight);
 bool worldToScreen(vec3 pos, vec2& screen, float matrix[16], int windowWidth, int windowHeight);
 float findDistance(vec3 self, vec3 entity);
+bool validateEntities(int i);
 
 
 HWND handle;
@@ -42,8 +43,6 @@ bool Cheats::initalize()
 		);
 	} while (!entityList);
 
-
-	entities.reserve(256);
 	jmpBackAddyEntityList = (uintptr_t)entityList + 18;
 	hookPushRax((void*)entityList, (void*)entHook, 18);
 
@@ -127,12 +126,12 @@ void Cheats::ESPLines(bool run, int width, int height, float lineWidth, float r,
 
 		for (int i = 0; i < entities.size(); i++)
 		{
-			if ((entities.at(i) != nullptr))
+			if (validateEntities(i))
 			{
 				vec2 vScreen;
 				if (worldToScreenDXtoOGL(entities.at(i)->xyz, vScreen, VM, width, height))
 				{
-					if ((entities.at(i) != nullptr))
+					if (validateEntities(i))
 					{
 						drawLine(width / 2, 0, vScreen.x, vScreen.y, lineWidth, r, g, b, a);
 					}
@@ -149,7 +148,7 @@ void Cheats::ESPBox(bool run, int width, int height, float thicc, float r, float
 		Cheats::initalize();
 	}
 
-	std::cout << "entlist: " << entityList << std::endl;
+	//std::cout << "entlist: " << entityList << std::endl;
 
 	if (run)
 	{
@@ -157,7 +156,7 @@ void Cheats::ESPBox(bool run, int width, int height, float thicc, float r, float
 
 		for (int i = 0; i < entities.size(); i++)
 		{
-			if ((entities.at(i) != nullptr))
+			if (validateEntities(i))
 			{
 				vec2 vScreen;
 				vec2 vScreenBones;
@@ -202,12 +201,12 @@ void Cheats::ESPText(bool ESPText, bool range, int width, int height, float r, f
 
 		for (int i = 0; i < entities.size(); i++)
 		{
-			if ((entities.at(i) != nullptr))
+			if (validateEntities(i))
 			{
 				vec2 vScreen;
 				if (worldToScreen(entities.at(i)->xyz, vScreen, VM, width, height))
 				{
-					if ((entities.at(i) != nullptr) && (entities.at(i)->namePtr->name != NULL))
+					if (validateEntities(i))
 					{
 						if (ESPText)
 							drawString(entities.at(i)->namePtr->name, vScreen.x, vScreen.y, r, g, b, a);
@@ -266,6 +265,36 @@ vec3 getPlayerPos()
 
 
 // Helper functions
+
+bool validateEntities(int i)
+{
+	if (entities.at(i) == nullptr)
+	{
+		return false;
+	}
+
+	if ((entities.at(i) != nullptr)&&
+		(entities.at(i)->locationPtr != nullptr)&&
+		(entities.at(i)->validationPtr1 != nullptr)&&
+		(entities.at(i)->validationPtr2 != nullptr)&&
+		(entities.at(i)->validationPtr3 != nullptr)
+		)
+	{
+		float dist = findDistance(localPlayer->xyz, entities.at(i)->xyz);
+		dist = dist / 100;
+		if (dist > 160.0f || dist < 0.1f)
+		{
+			entities.at(i) == nullptr;
+			return false;
+		}
+		return true;
+	}
+	else
+	{
+		entities.at(i) = nullptr;
+	}
+	return false;
+}
 
 void* detourFunction(void* pSource, void* pDestination, int dwLen)
 {
