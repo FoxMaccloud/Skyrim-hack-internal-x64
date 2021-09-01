@@ -181,7 +181,7 @@ void Menu::Render()
             }
             ImGui::Text("INS to open/close the menu");
 
-            ImGui::Text("V 0.3.8");
+            ImGui::Text("V 0.4.1");
 
             ImGui::EndTabItem();
         }
@@ -240,11 +240,22 @@ void Menu::Render()
             { 
                 Cheats::Teleport(cords);
                 teleport = false;
+            } ImGui::SameLine();
+           
+            vec3 mapMarker = getMapMarkerPos();
+            mapMarker.x = mapMarker.x / realCordsScale;
+            mapMarker.y = mapMarker.y / realCordsScale;
+            mapMarker.z = mapMarker.z / realCordsScale;
+
+            if (ImGui::Button("Teleport Map Marker"))
+            {
+                Cheats::Teleport(mapMarker);
             }
 
             ImGui::Text("SpeedHack");
             ImGui::SliderFloat("Speed##slider", &speed, 0.0f, 500.0f, "%.1f");
             ImGui::Checkbox("Speedhack", &speedHack);
+
 
             ImGui::EndTabItem();
         }

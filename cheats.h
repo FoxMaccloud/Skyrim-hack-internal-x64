@@ -18,6 +18,7 @@
 
 HWND find_main_window();
 vec3 getPlayerPos();
+vec3 getMapMarkerPos();
 
 namespace Cheats
 {

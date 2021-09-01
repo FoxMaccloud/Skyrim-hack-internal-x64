@@ -24,6 +24,9 @@ uintptr_t localPlayerCordinatesPtr;
 uintptr_t localPlayerSpeedPtr;
 uintptr_t viewMatrix;
 uintptr_t localPlayerPtr;
+uintptr_t mapMarkerPosX;
+uintptr_t mapMarkerPosY;
+uintptr_t mapMarkerPosZ;
 
 
 
@@ -93,6 +96,9 @@ bool Cheats::initalize()
 	viewMatrix = moduleBase + 0x2F4C910;
 	localPlayerPtr = moduleBase + 0x2F3B040;
 	localPlayer = *(playerEnt**)(moduleBase + 0x2F3B040);
+	mapMarkerPosX = moduleBase + 0x2F4EFA8;
+	mapMarkerPosY = moduleBase + 0x2F4EFAC;
+	mapMarkerPosZ = moduleBase + 0x2F4EFB0;
 
 	initalized = true;
 	return true;
@@ -230,6 +236,7 @@ void Cheats::ESPText(bool ESPText, bool range, int width, int height, float r, f
 
 void Cheats::Teleport(vec3 cordinates)
 {
+
 	if (!initalized)
 	{
 		Cheats::initalize();
@@ -259,6 +266,28 @@ vec3 getPlayerPos()
 		return fail;
 	}
 	return localPlayerCordinates->xyz;
+}
+
+vec3 getMapMarkerPos()
+{
+	if (!initalized)
+	{
+		Cheats::initalize();
+	}
+	if (localPlayerCordinates == nullptr)
+	{
+		return localPlayer->xyz;
+	}
+	float x;
+	float y;
+	float z;
+	vec3 mapMarkerXYZ = {
+		x = *(float*)mapMarkerPosX,
+		y = *(float*)mapMarkerPosY,
+		z = *(float*)mapMarkerPosZ,
+	};
+
+	return mapMarkerXYZ;
 }
 
 

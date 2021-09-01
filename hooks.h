@@ -50,6 +50,11 @@ public:
 
 float findDistance(vec3 self, vec3 entity)
 {
+	if (entity.x == NULL || entity.y == NULL || entity.z == NULL)
+	{
+		return 0.0f;
+	}
+
 	float x = (entity.x - self.x);
 	float y = (entity.y - self.y);
 	float z = (entity.z - self.z);
