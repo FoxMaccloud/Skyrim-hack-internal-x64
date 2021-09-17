@@ -15,6 +15,7 @@
 #include <vector>
 #include <TlHelp32.h>
 #include <cmath>
+#include "xorstr.h"
 
 
 struct vec4

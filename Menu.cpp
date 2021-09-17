@@ -166,55 +166,55 @@ void Menu::Render()
 
     if (menuShow)
     {
-        ImGui::Begin("Skyrim Hacks by FoxMaccloud", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        ImGui::Begin(XOR("Skyrim Hacks by FoxMaccloud"), nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
         
-        ImGui::BeginTabBar("Skyrim#TopBar", ImGuiTabBarFlags_NoTabListScrollingButtons);
+        ImGui::BeginTabBar(XOR("Skyrim#TopBar"), ImGuiTabBarFlags_NoTabListScrollingButtons);
 
 
         // Misc
-        if (ImGui::BeginTabItem("Misc")) {
+        if (ImGui::BeginTabItem(XOR("Misc"))) {
 
-            ImGui::Text("DEL to unload or press"); ImGui::SameLine();
-            if (ImGui::Button("Unload & Exit"))
+            ImGui::Text(XOR("DEL to unload or press")); ImGui::SameLine();
+            if (ImGui::Button(XOR("Unload & Exit")))
             {
                 running = false;
             }
-            ImGui::Text("INS to open/close the menu");
+            ImGui::Text(XOR("INS to open/close the menu"));
 
-            ImGui::Text("V 0.4.1");
+            ImGui::Text(XOR("V 0.4.3"));
 
             ImGui::EndTabItem();
         }
 
         // ESP
-        if (ImGui::BeginTabItem("ESP")) {
+        if (ImGui::BeginTabItem(XOR("ESP"))) {
 
-            ImGui::Text("ESP Line Colors");
+            ImGui::Text(XOR("ESP Line Colors"));
             {
-                ImGui::SliderFloat("Red##Line", &lineR, 0.0f, 1.0f, "R = %.1f");
-                ImGui::SliderFloat("Green##Line", &lineG, 0.0f, 1.0f, "G = %.1f");
-                ImGui::SliderFloat("Blue##Line", &lineB, 0.0f, 1.0f, "B = %.1f");
-                ImGui::SliderFloat("Alpha##Line", &lineA, 0.0f, 1.0f, "A = %.1f");
-                ImGui::SliderFloat("Thickness##Line", &lineThickness, 1.0f, 30.0f, "T = %.1f");
-                ImGui::Checkbox("ESP Lines", &ESPLines);
+                ImGui::SliderFloat(XOR("Red##Line"), &lineR, 0.0f, 1.0f, "R = %.1f");
+                ImGui::SliderFloat(XOR("Green##Line"), &lineG, 0.0f, 1.0f, "G = %.1f");
+                ImGui::SliderFloat(XOR("Blue##Line"), &lineB, 0.0f, 1.0f, "B = %.1f");
+                ImGui::SliderFloat(XOR("Alpha##Line"), &lineA, 0.0f, 1.0f, "A = %.1f");
+                ImGui::SliderFloat(XOR("Thickness##Line"), &lineThickness, 1.0f, 30.0f, "T = %.1f");
+                ImGui::Checkbox(XOR("ESP Lines"), &ESPLines);
             }
-            ImGui::Text("ESP Box Colors");
+            ImGui::Text(XOR("ESP Box Colors"));
             {
-                ImGui::SliderFloat("Red##Box", &boxR, 0.0f, 1.0f, "R = %.1f");
-                ImGui::SliderFloat("Green##Box", &boxG, 0.0f, 1.0f, "G = %.1f");
-                ImGui::SliderFloat("Blue##Box", &boxB, 0.0f, 1.0f, "B = %.1f");
-                ImGui::SliderFloat("Alpha##Box", &boxA, 0.0f, 1.0f, "A = %.1f");
-                ImGui::SliderFloat("Thickness##Box", &boxThicc, 1.0f, 30.0f, "T = %.1f");
-                ImGui::Checkbox("ESP Box", &ESPBox);
+                ImGui::SliderFloat(XOR("Red##Box"), &boxR, 0.0f, 1.0f, "R = %.1f");
+                ImGui::SliderFloat(XOR("Green##Box"), &boxG, 0.0f, 1.0f, "G = %.1f");
+                ImGui::SliderFloat(XOR("Blue##Box"), &boxB, 0.0f, 1.0f, "B = %.1f");
+                ImGui::SliderFloat(XOR("Alpha##Box"), &boxA, 0.0f, 1.0f, "A = %.1f");
+                ImGui::SliderFloat(XOR("Thickness##Box"), &boxThicc, 1.0f, 30.0f, "T = %.1f");
+                ImGui::Checkbox(XOR("ESP Box"), &ESPBox);
             }
-            ImGui::Text("ESP Text Colors");
+            ImGui::Text(XOR("ESP Text Colors"));
             {
-                ImGui::SliderFloat("Red##Text", &textR, 0.0f, 1.0f, "R = %.1f");
-                ImGui::SliderFloat("Green##Text", &textG, 0.0f, 1.0f, "G = %.1f");
-                ImGui::SliderFloat("Blue##Text", &textB, 0.0f, 1.0f, "B = %.1f");
-                ImGui::SliderFloat("Alpha##Text", &textA, 0.0f, 1.0f, "A = %.1f");
-                ImGui::Checkbox("ESP Text", &ESPText); ImGui::SameLine();
-                ImGui::Checkbox("ESP Range Finder", &ESPRange);
+                ImGui::SliderFloat(XOR("Red##Text"), &textR, 0.0f, 1.0f, "R = %.1f");
+                ImGui::SliderFloat(XOR("Green##Text"), &textG, 0.0f, 1.0f, "G = %.1f");
+                ImGui::SliderFloat(XOR("Blue##Text"), &textB, 0.0f, 1.0f, "B = %.1f");
+                ImGui::SliderFloat(XOR("Alpha##Text"), &textA, 0.0f, 1.0f, "A = %.1f");
+                ImGui::Checkbox(XOR("ESP Text"), &ESPText); ImGui::SameLine();
+                ImGui::Checkbox(XOR("ESP Range Finder"), &ESPRange);
             }
             ImGui::EndTabItem();
         }
@@ -229,14 +229,14 @@ void Menu::Render()
             currentPos[2] = currentPosVec3.z;
         }
 
-        if (ImGui::BeginTabItem("Movement")) {
+        if (ImGui::BeginTabItem(XOR("Movement"))) {
 
-            ImGui::Text("Teleport");
+            ImGui::Text(XOR("Teleport"));
 
             vec3 cords = { currentPos[0], currentPos[1], currentPos[2] };
-            if (ImGui::InputFloat3("XYZ", currentPos))
+            if (ImGui::InputFloat3(XOR("XYZ"), currentPos))
                 teleport = true;
-            if (ImGui::Button("Go!"))
+            if (ImGui::Button(XOR("Go!")))
             { 
                 Cheats::Teleport(cords);
                 teleport = false;
@@ -247,22 +247,22 @@ void Menu::Render()
             mapMarker.y = mapMarker.y / realCordsScale;
             mapMarker.z = mapMarker.z / realCordsScale;
 
-            if (ImGui::Button("Teleport Map Marker"))
+            if (ImGui::Button(XOR("Teleport Map Marker")))
             {
                 Cheats::Teleport(mapMarker);
             }
 
-            ImGui::Text("SpeedHack");
-            ImGui::SliderFloat("Speed##slider", &speed, 0.0f, 500.0f, "%.1f");
-            ImGui::Checkbox("Speedhack", &speedHack);
+            ImGui::Text(XOR("SpeedHack"));
+            ImGui::SliderFloat(XOR("Speed##slider"), &speed, 0.0f, 500.0f, "%.1f");
+            ImGui::Checkbox(XOR("Speedhack"), &speedHack);
 
 
             ImGui::EndTabItem();
         }
 
         // Debug Console
-        if (ImGui::BeginTabItem("Debug")) {
-            if (ImGui::Button("Debug Console"))
+        if (ImGui::BeginTabItem(XOR("Debug"))) {
+            if (ImGui::Button(XOR("Debug Console")))
             {
                 debugConsole = !debugConsole;
                 if (debugConsole)

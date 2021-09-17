@@ -9,6 +9,7 @@ bool hookPushRax(void* toHook, void* hk_func, int len);
 bool rewriteOrigBytesEntList(void* toWriteBack, int len = 18);
 bool rewriteOrigBytesLocalPlayerCordinates(void* toWriteBack, int len = 27);
 bool rewriteOrigBytesSpeedHack(void* toWriteBack, int len = 16);
+bool rewriteOrigBytesSpeedHackAir(void* toWriteBack, int len = 17);
 MODULEINFO GetModuleInfo(const wchar_t* szModule);
 uintptr_t FindPattern(const wchar_t* module, const char* pattern, const char* mask);
 bool worldToScreenDXtoOGL(vec3 pos, vec2& screen, float matrix[16], int windowWidth, int windowHeight);
@@ -22,6 +23,7 @@ uintptr_t moduleBase;
 uintptr_t entityList;
 uintptr_t localPlayerCordinatesPtr;
 uintptr_t localPlayerSpeedPtr;
+uintptr_t localPlayerSpeedAir;
 uintptr_t viewMatrix;
 uintptr_t localPlayerPtr;
 uintptr_t mapMarkerPosX;
@@ -83,11 +85,25 @@ bool Cheats::initalize()
 			"\xF3\x0F\x11\x8D\x10\x01\x00\x00\xF3\x0F\x10\x9D\x10\x01\x00\x00",
 			"xxxxxxxxxxxxxxxx"
 		);
+
 	} while (!localPlayerSpeedPtr);
 
 	jmpBacklocalPlayerSpeedPtr = localPlayerSpeedPtr + 16;
 	detour64((void*)localPlayerSpeedPtr, (void*)speedHack, 16);
 	//detour64((void*)localPlayerSpeedPtr, (void*)speedHack, 17);
+
+	do {
+		localPlayerSpeedAir = FindPattern(
+			L"SkyrimSE.exe",
+			"\xF3\x0F\x10\x8F\xB4\x00\x00\x00\xF3\x0F\x11\x84\x24\xC8\x00\x00\x00",
+			"xxxxxxxxxxxxxxxxx"
+		);
+	} while (!localPlayerSpeedAir);
+
+	jmpBackLocalPlayerSpeedAir = localPlayerSpeedAir + 17;
+	detour64((void*)localPlayerSpeedAir, (void*)speedHackAir, 17);
+
+	
 
 
 
@@ -110,7 +126,8 @@ bool Cheats::shutdown()
 	if (
 			(rewriteOrigBytesEntList((void*)entityList, 18)) && 
 			(rewriteOrigBytesLocalPlayerCordinates((void*)localPlayerCordinatesPtr, 27)) &&
-			(rewriteOrigBytesSpeedHack((void*)localPlayerSpeedPtr, 16))
+			(rewriteOrigBytesSpeedHack((void*)localPlayerSpeedPtr, 16)) &&
+			(rewriteOrigBytesSpeedHackAir((void*)localPlayerSpeedAir, 17))
 		)
 		return true;
 	return false;
@@ -245,6 +262,10 @@ void Cheats::Teleport(vec3 cordinates)
 	{
 		localPlayerCordinates->xyz = cordinates;
 	}
+	//uint64_t longlong;
+	//DWORD64 longlong;
+	//uintptr_t longlong;
+
 }
 
 void Cheats::SpeedHack(bool run, float speed)
@@ -464,6 +485,20 @@ bool rewriteOrigBytesSpeedHack(void* toWriteBack, int len)
 	unsigned char orig[] = {
 		0xF3, 0x0F, 0x11, 0x8D, 0x10, 0x01, 0x00, 0x00,			//movss [rbp+0x00000110], xmm1
 		0xF3, 0x0F, 0x10, 0x9D, 0x10, 0x01, 0x00, 0x00			//movss xmm3, [rbp + 0x00000110]
+	};
+	memcpy((void*)toWriteBack, orig, sizeof(orig));
+	DWORD temp;
+	VirtualProtect(toWriteBack, len, curProtection, &temp);
+	return true;
+}
+
+bool rewriteOrigBytesSpeedHackAir(void* toWriteBack, int len)
+{
+	DWORD curProtection;
+	VirtualProtect(toWriteBack, len, PAGE_EXECUTE_READWRITE, &curProtection);
+	unsigned char orig[] = {
+		0xF3, 0x0F, 0x10, 0x8F, 0xB4, 0x00, 0x00, 0x00,			// movss xmm1, [rdi+0xB4]
+		0xF3, 0x0F, 0x11, 0x84, 0x24, 0xC8, 0x00, 0x00, 0x00	// movss [rsp+0xC8], xmm0
 	};
 	memcpy((void*)toWriteBack, orig, sizeof(orig));
 	DWORD temp;

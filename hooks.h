@@ -250,11 +250,12 @@ __declspec(naked) void speedHack()
 		//movss[savexmm8], xmm8
 	}
 
-	if ((speedHackOn) &&
-		(localPlayer->accelerationBase->forwardBackwardSpeed > 1.0f) &&
-		(localPlayer->accelerationBase == currentEntUpdateSpeed))
+	if ((speedHackOn) && (localPlayer->accelerationBase == currentEntUpdateSpeed))
 	{
-		localPlayer->accelerationBase->forwardBackwardSpeed += moveSpeed;
+		if (localPlayer->accelerationBase->forwardBackwardSpeed > 1.0f)
+		{
+			localPlayer->accelerationBase->forwardBackwardSpeed += moveSpeed;
+		}
 	}
 
 	__asm {
@@ -289,5 +290,80 @@ __declspec(naked) void speedHack()
 		movss xmm3, [rbp + 0x00000110]
 
 		jmp [jmpBacklocalPlayerSpeedPtr]
+	}
+}
+
+uintptr_t jmpBackLocalPlayerSpeedAir = 0x0;
+
+__declspec(naked) void speedHackAir()
+{
+	__asm {
+
+		mov[currentEntUpdateSpeed], rdi
+
+		push rax; save current rax
+		push rbx; save current rbx
+		push rcx; save current rcx
+		push rdx; save current rdx
+		push rbp; save current rbp
+		push rdi; save current rdi
+		push rsi; save current rsi
+		push r8; save current r8
+		push r9; save current r9
+		push r10; save current r10
+		push r11; save current r11
+		push r12; save current r12
+		push r13; save current r13
+		push r14; save current r14
+		push r15; save current r15
+		movss[savexmm0], xmm0
+		movss[savexmm2], xmm2
+		//movss[savexmm3], xmm3
+		//movss[savexmm4], xmm4
+		//movss[savexmm5], xmm5
+		//movss[savexmm6], xmm6
+		//movss[savexmm7], xmm7
+		//movss[savexmm8], xmm8
+	}
+
+	if ((speedHackOn) && (localPlayer->accelerationBase == currentEntUpdateSpeed))
+	{
+		if (localPlayer->accelerationBase->forwardBackwardSpeed > 1.0f)
+		{
+			localPlayer->accelerationBase->forwardBackwardSpeed += moveSpeed;
+		}
+	}
+
+	__asm {
+		pop r15; restore current r15
+		pop r14; restore current r14
+		pop r13; restore current r13
+		pop r12; restore current r12
+		pop r11; restore current r11
+		pop r10; restore current r10
+		pop r9; restore current r9
+		pop r8; restore current r8
+		pop rsi; restore current rsi
+		pop rdi; restore current rdi
+		pop rbp; restore current rbp
+		pop rdx; restore current rdx
+		pop rcx; restore current rcx
+		pop rbx; restore current rbx
+		pop rax; restore current rax
+		//movss xmm8, [savexmm8]
+		//movss xmm7, [savexmm7]
+		//movss xmm6, [savexmm6]
+		//movss xmm5, [savexmm5]
+		//movss xmm4, [savexmm4]
+		//movss xmm3, [savexmm3]
+		movss xmm2, [savexmm2]
+		movss xmm0, [savexmm0]
+	}
+
+	__asm {
+		movss xmm1, [rdi+0xB4]
+		movss [rsp+0xC8], xmm0
+
+		jmp[jmpBackLocalPlayerSpeedAir]
 	}
 }
